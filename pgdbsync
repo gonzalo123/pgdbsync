@@ -1,0 +1,102 @@
+#! /usr/local/bin/php
+<?php
+//$sortOptions .= "v::"; 
+function shift($options_array)
+{
+    foreach( $options_array as $o => $a ) {
+        while($k=array_search("-". $o. $a, $GLOBALS['argv'])) {
+            if($k) {
+                unset($GLOBALS['argv'][$k]);
+            }
+        }
+        while($k=array_search("-" . $o, $GLOBALS['argv'])) {
+            if($k) {
+                unset($GLOBALS['argv'][$k]);
+                unset($GLOBALS['argv'][$k+1]);
+            }
+        }
+    }
+    $GLOBALS['argv'] = array_merge($GLOBALS['argv']);
+}
+$nok = "\033[31;1m[NOK] \033[0m";
+$ok  = "\033[32m[OK] \033[0m";
+
+$shortopts  = "";
+$shortopts .= "s:";
+$shortopts .= "f:";
+$shortopts .= "t:";
+$shortopts .= "a:";
+$shortopts .= "c:";
+
+try {
+	$options = getopt($shortopts);
+	
+	$schema  = !array_key_exists('s', $options) ?: $options['s'];
+	$from    = !array_key_exists('f', $options) ?: $options['f'];
+	$to      = !array_key_exists('t', $options) ?: $options['t'];
+	$action  = !array_key_exists('a', $options) ?: $options['a'];
+
+	if (array_key_exists('c', $options)) {
+		$configFile = $options['c'];
+	} else {
+		$configFile = dirname(__FILE__) . DIRECTORY_SEPARATOR ."conf.ini";	
+	}
+	if (!is_file($configFile)) {
+		throw new Exception("Config file ({$configFile}) not found"); 
+	}
+	
+	$conf  = parse_ini_file($configFile, true);
+	
+	if (array_key_exists($from, $conf)) {
+		$master = $conf[$from];	
+	} else {
+		throw new Exception("unknow 'from' database '{$from}' ");
+	}
+	
+	include("lib/Pgdbsync/includes.php");
+	//use \Pgdbsync;
+	
+	$dbVc = new \Pgdbsync\Db();
+	$dbVc->setMasrer(new \Pgdbsync\DbConn($master));
+	if ($to == 'all') {
+		foreach ($conf as $key => $slave) {
+			if ($key != $from) {
+				$dbVc->setSlave(new \Pgdbsync\DbConn($slave));
+			}
+		}
+	} else {
+		if (array_key_exists($to, $conf)) {
+			$slave = $conf[$to];
+		} else {
+			throw new Exception("unknow 'to' database '{$to}' ");
+		}
+		$dbVc->setSlave(new \Pgdbsync\DbConn($slave));
+	}
+	
+	switch ($action) {
+		case 'diff':
+			echo $dbVc->diff($schema);
+			break;
+		case 'summary':
+			echo $dbVc->summary($schema);
+			break;
+		case 'run':
+			$array = $dbVc->run($schema);
+			foreach ($array as $host => $errors) {
+				echo $host . "\n";
+				foreach ($errors as $error) {
+					echo $nok . " " . $error[1] . "\n";
+					echo "----" . "\n";
+					echo $error[0] . "\n";
+				}
+				echo "\n";
+			}
+			break;
+		case 'raw':
+			$array = $dbVc->raw($schema);
+			break;
+	}
+	echo "\n" . $ok . " end process\n";
+} catch (Exception $e) {
+	echo $nok . " " . $e->getMessage() . "\n";
+}
