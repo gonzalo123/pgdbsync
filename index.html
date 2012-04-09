@@ -1,0 +1,120 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Pgdbsync by gonzalo123</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="javascripts/scale.fix.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Pgdbsync</h1>
+<p>Keep our PostgreSQL's development server and production servers synchronized</p>
+        <p class="view"><a href="https://github.com/gonzalo123/pgdbsync">View the Project on GitHub <small>gonzalo123/pgdbsync</small></a></p>
+        <ul>
+          <li><a href="https://github.com/gonzalo123/pgdbsync/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/gonzalo123/pgdbsync/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/gonzalo123/pgdbsync">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <p>pgdbsync allows us to track the differences in the database structure between different databases. It also create the needed script to synchronize the servers and even to run the script.</p>
+
+<p>The usage of pgdbsync command line script is the following one:</p>
+
+<ul>
+<li>-c [schema]</li>
+<li>-f [from database]</li>
+<li>-t [to database]</li>
+<li>-a [action: diff | summary | run]</li>
+</ul><h3>Summary</h3>
+
+<pre><code>./pgdbsync -s web -f devel -t prod -a summary
+HOST : production :: prod1
+--------------------------------------------
+function
+ create :: WEB.hello(varchar)
+tables
+ create :: WEB.test
+view
+ create :: WEB.testview
+
+[OK]  end process
+</code></pre>
+
+<h3>Creating diff script</h3>
+
+<pre><code>./pgdbsync -s wf -f devel -t prod -a diff
+HOST : production :: prod1
+--------------------------------------------
+CREATE OR REPLACE FUNCTION web.hello(item character varying)
+ RETURNS character varying
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+BEGIN
+ return "Hi " || item;
+END;
+$function$
+
+CREATE TABLE web.test(
+ test_name character NOT NULL,
+ test_id integer NOT NULL,
+ test_date timestamp without time zone NOT NULL,
+ CONSTRAINT pk_test PRIMARY KEY (test_date)
+)
+TABLESPACE web;
+ALTER TABLE web.test OWNER TO user;
+
+CREATE OR REPLACE VIEW web.testview AS
+ SELECT test.test_name, test.test_id, test.test_date FROM web.test WHERE (test.test_name ~~ 't%'::text);;
+ALTER TABLE web.testview OWNER TO user;
+[OK]  end process
+</code></pre>
+
+<h3>executing diff script</h3>
+
+<pre><code>./pgdbsync -s web -f devel -t prod -a run
+HOST : production :: prod1
+----------------------------------
+﻿
+[OK]  end process
+</code></pre>
+
+<h3>creating diff script again</h3>
+
+<pre><code>./pgdbsync -s wf -f devel -t prod1 -a diff
+
+HOST : prododuction :: prod1
+--------------------------------------------
+
+drop function web.hello(varchar);
+
+DROP TABLE web.test;
+
+drop view web.testview;
+
+[OK]  end process
+</code></pre>
+
+<p>More info:</p>
+
+<p><a href="http://gonzalo123.wordpress.com/2010/12/13/keep-our-postgresql-databases-syncronized-with-php-database-version-control/">http://gonzalo123.wordpress.com/2010/12/13/keep-our-postgresql-databases-syncronized-with-php-database-version-control/</a></p>
+      </section>
+    </div>
+    <footer>
+      <p>Project maintained by <a href="https://github.com/gonzalo123">gonzalo123</a></p>
+      <p>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></p>
+    </footer>
+    <!--[if !IE]><script>fixScale(document);</script><!--<![endif]-->
+  </body>
+</html>
