@@ -29,10 +29,9 @@ class Sequence
     	$aclArr = (array) explode(",", $acl);
     	foreach ($aclArr as $item) {
     		$x = explode("=", $item);
-            if ($x[0] != '') {
-        		$out[] = $x[0];
-            }
+    		$out[] = $x[0];
     	}
+    	
         return $out;
     }
 	private function getSequenceInfo($schema, $name)

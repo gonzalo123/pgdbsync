@@ -7,8 +7,9 @@ class Table
     private $_tablename = null;
     private $_owner = null;
     private $_tablespace = null;
+    private $_oid = null;
 
-    function __construct(\PDO &$pdo, $schema, $tablename, $owner, $tablespace, $hasindexes, $dsn)
+    function __construct(\PDO &$pdo, $schema, $tablename, $owner, $tablespace, $hasindexes, $dsn, $oid)
     {
         $this->_pdo = $pdo;
         $this->_schema     = $schema;
@@ -16,6 +17,7 @@ class Table
         $this->_owner      = $owner;
         $this->_tablespace = $tablespace;
         $this->_dsn = $dsn;
+        $this->_oid = $oid;
     }
 
     public function getOwner()
@@ -31,6 +33,11 @@ class Table
     public function getName()
     {
         return $this->_tablename;
+    }
+    
+    public function getOid()
+    {
+        return $this->_oid;
     }
 
     const SQL_GET_GRANTS = "
@@ -88,14 +95,25 @@ class Table
 
     const SQL_GET_CONSTRAINTS = "
 	    SELECT
-			*
+		    DISTINCT ON (a.constraint_name, a.table_name, b.confrelid, b.conname, b.conrelid, b.conkey, b.confkey, d.attname) 
+            *
 		FROM
 			information_schema.table_constraints a,
 			pg_constraint b
+        LEFT JOIN pg_class AS c 
+         	ON (b.confrelid = c.relfilenode)
+        
+         LEFT JOIN pg_attribute AS d
+        	 ON (
+         		c.relfilenode = d.attrelid AND
+         		d.attnum = ANY (b.confkey)
+         	)
 		WHERE
-			a.constraint_name = b.conname and
-			table_schema = :SCHEMA and 
-			table_name = :TABLE";
+			a.constraint_name = b.conname 
+			AND table_schema = :SCHEMA 
+			AND table_name = :TABLE 
+            AND b.conrelid = (:SCHEMA || '.' || a.table_name)::regclass::oid   
+            ";
 
     public function constraints()
     {
@@ -111,4 +129,13 @@ class Table
         }
         return $out;
     }
+    
+    public static function getFkReferenceData() {
+        return array(
+            'schema',
+            'table',
+            'columns'
+        );
+    }
+    
 }

@@ -68,9 +68,10 @@ class DbConn {
 		$stmt->execute(array(
         	'SCHEMA' => $this->_schema,
         	));	
+		$out = array();
 		foreach ($stmt->fetchAll() as $row) {
-        	$out[] = new View($this->pdo, $row, $this->_schema);
-        }
+	 	       	$out[] = new View($this->pdo, $row, $this->_schema);
+	        }
 		return $out;
 	}
 
@@ -141,7 +142,7 @@ class DbConn {
 	}
     public function getTables()
     {
-        $sql = "select * from pg_catalog.pg_tables where schemaname=:SCHEMA order by schemaname, tablename";
+        $sql = "select *, (schemaname || '.' || tablename)::regclass::oid from pg_catalog.pg_tables where schemaname=:SCHEMA order by schemaname, tablename";
         if (is_null($this->_schema)) {
             throw new Exception("Schema must set");
         }
@@ -149,7 +150,7 @@ class DbConn {
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute(array('SCHEMA' => strtolower($this->_schema)));
         while ($row = $stmt->fetch()) {
-            $out[] = new Table($this->pdo, $row['schemaname'], $row['tablename'], $row['tableowner'], $row['tablespace'], $row['hasindexes'], $this->dsn);
+            $out[] = new Table($this->pdo, $row['schemaname'], $row['tablename'], $row['tableowner'], $row['tablespace'], $row['hasindexes'], $this->dsn, $row['oid']);
         }
         $stmt = null;
         return $out;

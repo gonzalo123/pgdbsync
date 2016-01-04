@@ -29,15 +29,17 @@ class Functiondb
     {
     	$types = null;
     	$proargtypes = (array) explode(" ", $this->_meta['proargtypes']);
+	
     	if (count($proargtypes) > 0) {
     		$typeNameArr = array();
+		
     		$stmt = $this->_pdo->prepare("select typname from pg_type where oid = :OID");
     		foreach ($proargtypes as $type) {
-                if ($type != '') {
-			        $stmt->execute(array('OID' => $type));
-			        $out = $stmt->fetchAll();
-			        $typeNameArr[] = $out[0][0];
-                }
+				if(!empty($type)){
+					$stmt->execute(array('OID' => $type));
+					$out = $stmt->fetchAll();
+					$typeNameArr[] = $out[0][0];
+				}
     		}	
     		$types = implode(", ", $typeNameArr);
     	}
