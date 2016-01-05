@@ -1,3 +1,6 @@
+pgdbsync
+===========
+
 pgdbsync allows us to track the differences in the database structure between different databases. It also create the needed script to synchronize the servers and even to run the script.
 
 The usage of pgdbsync command line script is the following one:
