@@ -1,0 +1,18 @@
+language: php
+
+php:
+  - 5.6
+  - 7.0
+
+install:
+  - composer install
+
+script: phpunit --coverage-text
+
+services:
+  - postgresql
+
+before_script:
+  - psql -c 'create database gonzalo;' -U username -W password
+  - psql -c 'create database gonzalo2;' -U username -W password
+  - psql -c 'create database gonzalo3;' -U username -W password
