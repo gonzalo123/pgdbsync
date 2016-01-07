@@ -12,6 +12,7 @@ services:
   - postgresql
 
 before_script:
-  - psql -c 'create database gonzalo;' -U username
-  - psql -c 'create database gonzalo2;' -U username
-  - psql -c 'create database gonzalo3;' -U username
+  - cp tests/fixtures/conf.travis.ini tests/fixtures/conf.ini
+  - psql -c 'create database gonzalo;' -U postgres
+  - psql -c 'create database gonzalo2;' -U postgres
+  - psql -c 'create database gonzalo3;' -U postgres
