@@ -25,12 +25,12 @@ class DbConn
 
     public function dbName()
     {
-        return $this->conf['DBNAME'];
+        return isset($this->conf['DBNAME']) ? $this->conf['DBNAME'] : null;
     }
 
     public function dbHost()
     {
-        return $this->conf['HOST'];
+        return isset($this->conf['HOST']) ? $this->conf['HOST'] : null;
     }
 
     public function getDsn()
