@@ -16,7 +16,7 @@ class DbConn
     {
         $dsn = $this->getDsn();
 
-        $this->pdo = new \PDO($dsn, $this->conf['USER'], $this->conf['PASSWORD']);
+        $this->pdo = new \PDO($dsn, $this->conf['USER'], isset($this->conf['PASSWORD']) ? $this->conf['PASSWORD'] : null);
         $this->pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
         $this->dsn = $dsn;
 
