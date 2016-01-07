@@ -303,7 +303,7 @@ class Db
         $data   = $this->_diff($schema);
         foreach ($data as $row) {
             if (count($row['summary']) > 0) {
-                $title    = "HOST : " . $row['db']->dbHost() . " :: " . $row['db']->dbName();
+                $title    = "DBNAME : " . $row['db']->dbName();
                 $buffer[] = $title;
                 $buffer[] = str_repeat("-", strlen($title));
 
@@ -355,7 +355,7 @@ class Db
         $data   = $this->_diff($schema);
         foreach ($data as $row) {
             if (count($row['diff']) > 0) {
-                $title    = "HOST : " . $row['db']->dbHost() . " :: " . $row['db']->dbName();
+                $title    = "DBNAME : " . $row['db']->dbName();
                 $buffer[] = $title;
                 $buffer[] = str_repeat("-", strlen($title));
 
@@ -364,7 +364,7 @@ class Db
                 }
                 $buffer[] = "\n";
             } else {
-                $buffer[] = "Already sync : " . $row['db']->dbHost() . " :: " . $row['db']->dbName();
+                $buffer[] = "Already sync : " . $row['db']->dbName();
             }
         }
 

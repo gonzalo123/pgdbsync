@@ -20,7 +20,7 @@ class ContainerBuilderTest extends \PHPUnit_Framework_TestCase
         $dbVc->setMasrer(new DbConn($this->conf['devel']));
         $dbVc->setSlave(new DbConn($this->conf['devel']));
 
-        $this->assertEquals("Already sync : localhost :: gonzalo1\n", $dbVc->diff('public'));
+        $this->assertEquals("Already sync : gonzalo1\n", $dbVc->diff('public'));
     }
 
     public function test_compare_different_databases()
@@ -29,7 +29,7 @@ class ContainerBuilderTest extends \PHPUnit_Framework_TestCase
         $dbVc->setMasrer(new DbConn($this->conf['devel']));
         $dbVc->setSlave(new DbConn($this->conf['devel2']));
 
-        $expected = "HOST : localhost :: gonzalo2\n----------------------------\n\nDROP TABLE public.testtable2;";
+        $expected = "DBNAME : gonzalo2\n-----------------\n\nDROP TABLE public.testtable2;";
         $this->assertEquals($expected, trim($dbVc->diff('public')));
     }
 
