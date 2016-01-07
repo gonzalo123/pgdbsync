@@ -30,7 +30,7 @@ class Database
 
     private function connectToDatabase($key)
     {
-        $conn = new \PDO($this->getDsn($key), $this->conf[$key]['USER'], $this->conf[$key]['PASSWORD']);
+        $conn = new \PDO($this->getDsn($key), $this->conf[$key]['USER'], isset($this->conf[$key]['PASSWORD']) ? $this->conf[$key]['PASSWORD'] : null);
         $conn->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
         $this->conn[$key] = $conn;
     }
