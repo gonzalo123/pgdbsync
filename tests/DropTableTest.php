@@ -14,7 +14,7 @@ class DropTableTest extends \PHPUnit_Framework_TestCase
         $this->conf = parse_ini_file(__DIR__ . "/fixtures/conf.ini", true);
     }
 
-    public function test_table_with_different_colums_databases()
+    public function test_drop_table()
     {
         $dbVc = new Pgdbsync\Db();
         $dbVc->setMasrer(new DbConn($this->conf['devel']));
