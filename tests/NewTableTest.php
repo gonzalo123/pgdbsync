@@ -34,8 +34,7 @@ CREATE TABLE public.testtable(
  \"name\" character varying,
  \"surname\" character varying,
  CONSTRAINT testtable_pkey PRIMARY KEY (\"userid\")
-);
-GRANT ALL ON TABLE public.testtable TO {$user};";
+);";
 
         $this->assertEquals($expected, $diff[0]['diff'][0]);
     }
