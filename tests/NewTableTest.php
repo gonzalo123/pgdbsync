@@ -34,7 +34,8 @@ CREATE TABLE public.testtable(
  \"name\" character varying,
  \"surname\" character varying,
  CONSTRAINT testtable_pkey PRIMARY KEY (\"userid\")
-);";
+);
+GRANT ALL ON TABLE public.testtable TO {$user};";
 
         $this->assertEquals($expected, $diff[0]['diff'][0]);
     }
@@ -43,12 +44,14 @@ CREATE TABLE public.testtable(
     {
         $this->database = new Database($this->conf);
         $this->database->executeInDatabase('devel', function (PDO $conn) {
+            $user = $this->conf['devel2']['USER'];
             $conn->exec("CREATE TABLE testTable (
                 userid VARCHAR PRIMARY KEY NOT NULL,
                 password VARCHAR NOT NULL ,
                 name VARCHAR,
                 surname VARCHAR
             );");
+            $conn->exec("GRANT ALL ON TABLE public.testtable TO {$user}");
         });
     }
 
