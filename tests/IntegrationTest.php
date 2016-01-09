@@ -4,7 +4,7 @@ include __DIR__ . '/fixtures/Database.php';
 
 use Pgdbsync\DbConn;
 
-class ContainerBuilderTest extends \PHPUnit_Framework_TestCase
+class IntegrationTest extends \PHPUnit_Framework_TestCase
 {
     private $database;
     private $conf;
