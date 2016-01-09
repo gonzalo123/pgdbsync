@@ -21,8 +21,23 @@ class NewTableTest extends \PHPUnit_Framework_TestCase
         $dbVc->setSlave(new DbConn($this->conf['devel2']));
 
         $user = $this->conf['devel2']['USER'];
-        $expected = "DBNAME : gonzalo2\n-----------------\n\nCREATE TABLE public.testtable(\n \"userid\" character varying NOT NULL,\n \"password\" character varying NOT NULL,\n \"name\" character varying,\n \"surname\" character varying,\n CONSTRAINT testtable_pkey PRIMARY KEY (\"userid\") \n);\nGRANT ALL ON TABLE public.testtable TO {$user};";
-        $this->assertEquals($expected, trim($dbVc->diff('public')));
+        $diff = $dbVc->raw('public');
+
+        $this->assertCount(1, $diff);
+        $this->assertCount(1, $diff[0]['diff']);
+
+
+        $expected = "
+CREATE TABLE public.testtable(
+ \"userid\" character varying NOT NULL,
+ \"password\" character varying NOT NULL,
+ \"name\" character varying,
+ \"surname\" character varying,
+ CONSTRAINT testtable_pkey PRIMARY KEY (\"userid\")
+);
+GRANT ALL ON TABLE public.testtable TO {$user};";
+
+        $this->assertEquals($expected, $diff[0]['diff'][0]);
     }
 
     public function setUp()

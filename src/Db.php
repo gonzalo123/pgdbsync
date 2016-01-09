@@ -127,7 +127,7 @@ class Db
                             case 'PRIMARY KEY':
                                 $constraintSrc = $constraintInfo['src'];
                                 $columns       = implode(', ', $columns);
-                                $_columns[]    = "CONSTRAINT {$constraint} PRIMARY KEY ({$columns}) ";
+                                $_columns[]    = "CONSTRAINT {$constraint} PRIMARY KEY ({$columns})";
                                 break;
                         }
                     }

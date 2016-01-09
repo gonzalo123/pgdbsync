@@ -20,7 +20,10 @@ class IntegrationTest extends \PHPUnit_Framework_TestCase
         $dbVc->setMasrer(new DbConn($this->conf['devel']));
         $dbVc->setSlave(new DbConn($this->conf['devel']));
 
-        $this->assertEquals("Already sync : gonzalo1\n", $dbVc->diff('public'));
+        $diff = $dbVc->raw('public');
+
+        $this->assertCount(1, $diff);
+        $this->assertCount(0, $diff[0]['diff']);
     }
 
     public function test_compare_different_databases()
@@ -29,8 +32,12 @@ class IntegrationTest extends \PHPUnit_Framework_TestCase
         $dbVc->setMasrer(new DbConn($this->conf['devel']));
         $dbVc->setSlave(new DbConn($this->conf['devel2']));
 
-        $expected = "DBNAME : gonzalo2\n-----------------\n\nDROP TABLE public.testtable2;";
-        $this->assertEquals($expected, trim($dbVc->diff('public')));
+        $diff = $dbVc->raw('public');
+
+        $this->assertCount(1, $diff);
+        $this->assertCount(1, $diff[0]['diff']);
+
+        $this->assertEquals("DROP TABLE public.testtable2;", trim($diff[0]['diff'][0]));
     }
 
     public function setUp()

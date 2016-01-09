@@ -20,8 +20,13 @@ class TableColumnTest extends \PHPUnit_Framework_TestCase
         $dbVc->setMasrer(new DbConn($this->conf['devel']));
         $dbVc->setSlave(new DbConn($this->conf['devel2']));
 
-        $expected = "DBNAME : gonzalo2\n-----------------\n\nadd column \"name\" to table testtable\ndelete column \"name2\" to table testtable";
-        $this->assertEquals($expected, trim($dbVc->diff('public')));
+        $diff = $dbVc->raw('public');
+
+        $this->assertCount(1, $diff);
+        $this->assertCount(2, $diff[0]['diff']);
+
+        $this->assertEquals("add column \"name\" to table testtable", trim($diff[0]['diff'][0]));
+        $this->assertEquals("delete column \"name2\" to table testtable", trim($diff[0]['diff'][1]));
     }
 
     public function setUp()

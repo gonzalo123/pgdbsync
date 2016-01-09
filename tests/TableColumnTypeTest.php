@@ -20,8 +20,12 @@ class TableColumnTypeTest extends \PHPUnit_Framework_TestCase
         $dbVc->setMasrer(new DbConn($this->conf['devel']));
         $dbVc->setSlave(new DbConn($this->conf['devel2']));
 
-        $expected = "DBNAME : gonzalo2\n-----------------\n\nALTER TABLE public.testtable ALTER \"name\" TYPE character varying;";
-        $this->assertEquals($expected, trim($dbVc->diff('public')));
+        $diff = $dbVc->raw('public');
+        $this->assertCount(1, $diff);
+        $this->assertCount(1, $diff[0]['diff']);
+
+        $expected = "ALTER TABLE public.testtable ALTER \"name\" TYPE character varying;";
+        $this->assertEquals($expected, trim($diff[0]['diff'][0]));
     }
 
     public function setUp()

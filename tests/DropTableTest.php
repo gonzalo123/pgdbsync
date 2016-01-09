@@ -19,9 +19,12 @@ class DropTableTest extends \PHPUnit_Framework_TestCase
         $dbVc = new Pgdbsync\Db();
         $dbVc->setMasrer(new DbConn($this->conf['devel']));
         $dbVc->setSlave(new DbConn($this->conf['devel2']));
-        
-        $expected = "DBNAME : gonzalo2\n-----------------\n\nDROP TABLE public.testtable;";
-        $this->assertEquals($expected, trim($dbVc->diff('public')));
+
+        $diff = $dbVc->raw('public');
+
+        $this->assertCount(1, $diff);
+        $this->assertCount(1, $diff[0]['diff']);
+        $this->assertEquals("DROP TABLE public.testtable;", trim($diff[0]['diff'][0]));
     }
 
     public function setUp()
