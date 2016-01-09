@@ -20,7 +20,8 @@ class NewTableTest extends \PHPUnit_Framework_TestCase
         $dbVc->setMasrer(new DbConn($this->conf['devel']));
         $dbVc->setSlave(new DbConn($this->conf['devel2']));
 
-        $expected = "DBNAME : gonzalo2\n-----------------\n\nCREATE TABLE public.testtable(\n \"userid\" character varying NOT NULL,\n \"password\" character varying NOT NULL,\n \"name\" character varying,\n \"surname\" character varying,\n CONSTRAINT testtable_pkey PRIMARY KEY (\"userid\") \n);\nGRANT ALL ON TABLE public.testtable TO gonzalo;";
+        $user = $this->conf['devel2']['USER'];
+        $expected = "DBNAME : gonzalo2\n-----------------\n\nCREATE TABLE public.testtable(\n \"userid\" character varying NOT NULL,\n \"password\" character varying NOT NULL,\n \"name\" character varying,\n \"surname\" character varying,\n CONSTRAINT testtable_pkey PRIMARY KEY (\"userid\") \n);\nGRANT ALL ON TABLE public.testtable TO {$user};";
         $this->assertEquals($expected, trim($dbVc->diff('public')));
     }
 
