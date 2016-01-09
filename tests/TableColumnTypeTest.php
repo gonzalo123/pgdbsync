@@ -4,7 +4,7 @@ include_once __DIR__ . '/fixtures/Database.php';
 
 use Pgdbsync\DbConn;
 
-class IntegrationTest extends \PHPUnit_Framework_TestCase
+class TableColumnTypeTest extends \PHPUnit_Framework_TestCase
 {
     private $database;
     private $conf;
@@ -14,22 +14,13 @@ class IntegrationTest extends \PHPUnit_Framework_TestCase
         $this->conf = parse_ini_file(__DIR__ . "/fixtures/conf.ini", true);
     }
 
-    public function test_compare_same_squema()
-    {
-        $dbVc = new Pgdbsync\Db();
-        $dbVc->setMasrer(new DbConn($this->conf['devel']));
-        $dbVc->setSlave(new DbConn($this->conf['devel']));
-
-        $this->assertEquals("Already sync : gonzalo1\n", $dbVc->diff('public'));
-    }
-
-    public function test_compare_different_databases()
+    public function test_table_column_with_different_type()
     {
         $dbVc = new Pgdbsync\Db();
         $dbVc->setMasrer(new DbConn($this->conf['devel']));
         $dbVc->setSlave(new DbConn($this->conf['devel2']));
 
-        $expected = "DBNAME : gonzalo2\n-----------------\n\nDROP TABLE public.testtable2;";
+        $expected = "DBNAME : gonzalo2\n-----------------\n\nALTER TABLE public.testtable ALTER \"name\" TYPE character varying;";
         $this->assertEquals($expected, trim($dbVc->diff('public')));
     }
 
@@ -38,8 +29,8 @@ class IntegrationTest extends \PHPUnit_Framework_TestCase
         $this->database = new Database($this->conf);
         $this->database->executeInDatabase('devel', function (PDO $conn) {
             $conn->exec("CREATE TABLE testTable (
-                userid VARCHAR PRIMARY KEY  NOT NULL ,
-                password VARCHAR NOT NULL ,
+                userid VARCHAR PRIMARY KEY NOT NULL,
+                password VARCHAR NOT NULL,
                 name VARCHAR,
                 surname VARCHAR
             );");
@@ -47,15 +38,9 @@ class IntegrationTest extends \PHPUnit_Framework_TestCase
 
         $this->database->executeInDatabase('devel2', function (PDO $conn) {
             $conn->exec("CREATE TABLE testTable (
-                userid VARCHAR PRIMARY KEY  NOT NULL ,
+                userid VARCHAR PRIMARY KEY NOT NULL,
                 password VARCHAR NOT NULL ,
-                name VARCHAR,
-                surname VARCHAR
-            );");
-            $conn->exec("CREATE TABLE testTable2 (
-                userid VARCHAR PRIMARY KEY  NOT NULL ,
-                password VARCHAR NOT NULL ,
-                name VARCHAR,
+                name TEXT,
                 surname VARCHAR
             );");
         });
@@ -69,7 +54,6 @@ class IntegrationTest extends \PHPUnit_Framework_TestCase
 
         $this->database->executeInDatabase('devel2', function(PDO $conn) {
             $conn->exec("DROP TABLE testTable");
-            $conn->exec("DROP TABLE testTable2");
         });
     }
 }

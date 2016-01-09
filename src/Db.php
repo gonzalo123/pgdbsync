@@ -269,7 +269,7 @@ class Db
         }
     }
 
-    private function _addColumns($table, $columns, $master, &$diff, &$summary)
+    private function _addColumns($schema, $table, $columns, $master, &$diff, &$summary)
     {
         if (count((array)$columns) > 0) {
             foreach ($columns as $column) {
@@ -279,7 +279,7 @@ class Db
         }
     }
 
-    private function _deleteColumns($table, $columns, $master, &$diff, &$summary)
+    private function _deleteColumns($schema, $table, $columns, $master, &$diff, &$summary)
     {
         if (count((array)$columns) > 0) {
             foreach ($columns as $column) {
@@ -483,23 +483,25 @@ class Db
 
                     $newColumns = array_diff($masterColumns, $slaveColumns);
                     if (count($newColumns) > 0) {
-                        $this->_addColumns($table, $newColumns, $master, $diff, $summary);
+                        $this->_addColumns($schema, $table, $newColumns, $master, $diff, $summary);
                     }
 
                     $deletedColumns = array_diff($slaveColumns, $masterColumns);
-                    $this->_deleteColumns($table, $deletedColumns, $master, $diff, $summary);
+                    $this->_deleteColumns($schema, $table, $deletedColumns, $master, $diff, $summary);
 
                     foreach ($masterColumns as $column) {
                         // check modifications (different between $master and $slave)
                         // check differences in type
-                        $masterType = $master['tables'][$table]['columns'][$column]['type'];
-                        $slaveType  = $slave['tables'][$table]['columns'][$column]['type'];
-                        // check differences in precission
-                        $masterPrecission = $master['tables'][$table]['columns'][$column]['precision'];
-                        $slavePrecission  = $slave['tables'][$table]['columns'][$column]['precision'];
+                        if (isset($master['tables'][$table]['columns'][$column]) && isset($slave['tables'][$table]['columns'][$column])) {
+                            $masterType = $master['tables'][$table]['columns'][$column]['type'];
+                            $slaveType  = $slave['tables'][$table]['columns'][$column]['type'];
+                            // check differences in precission
+                            $masterPrecission = $master['tables'][$table]['columns'][$column]['precision'];
+                            $slavePrecission  = $slave['tables'][$table]['columns'][$column]['precision'];
 
-                        if ($masterType != $slaveType || $masterPrecission != $slavePrecission) {
-                            $this->_alterColumn($schema, $table, $column, $master, $diff, $summary);
+                            if ($masterType != $slaveType || $masterPrecission != $slavePrecission) {
+                                $this->_alterColumn($schema, $table, $column, $master, $diff, $summary);
+                            }
                         }
                     }
 
