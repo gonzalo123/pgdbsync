@@ -27,6 +27,7 @@ $shortopts .= "f:";
 $shortopts .= "t:";
 $shortopts .= "a:";
 $shortopts .= "c:";
+$shortopts .= "k:";
 
 try {
 	$options = getopt($shortopts);
@@ -35,6 +36,7 @@ try {
 	$from    = !array_key_exists('f', $options) ?: $options['f'];
 	$to      = !array_key_exists('t', $options) ?: $options['t'];
 	$action  = !array_key_exists('a', $options) ?: $options['a'];
+	$foreignKeys  = !array_key_exists('k', $options) ?: $options['k'];
 
 	if (array_key_exists('c', $options)) {
 		$configFile = $options['c'];
@@ -57,7 +59,20 @@ try {
 	//use \Pgdbsync;
 	
 	$dbVc = new \Pgdbsync\Db();
-	$dbVc->setMasrer(new \Pgdbsync\DbConn($master));
+	if($foreignKeys == 'skip') {
+	   $options = array(
+            \Pgdbsync\Db::OPTION_WITHOUT_FOREIGN_KEYS => true
+       );
+	} elseif(empty($foreignKeys)) {
+	   $options = array(
+            \Pgdbsync\Db::OPTION_WITHOUT_FOREIGN_KEYS => false
+       );
+	} else {
+	   throw new Exception("unknown value for '-k' option: '".$foreignKeys."'. Use '-k skip' to generate SQL without foreign keys.");
+	}
+	
+	$dbVc->setOptions($options);
+	$dbVc->setMaster(new \Pgdbsync\DbConn($master));
 	if ($to == 'all') {
 		foreach ($conf as $key => $slave) {
 			if ($key != $from) {

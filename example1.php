@@ -4,7 +4,7 @@ use \Pgdbsync;
 $conf  = parse_ini_file("conf.ini", true);
 
 $dbVc = new Pgdbsync\Db();
-$dbVc->setMasrer(new Pgdbsync\DbConn($conf['development']));
+$dbVc->setMaster(new Pgdbsync\DbConn($conf['development']));
 $dbVc->setSlave(new Pgdbsync\DbConn($conf['production']));
 
 echo "<pre>";

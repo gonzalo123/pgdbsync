@@ -4,13 +4,17 @@ namespace Pgdbsync;
 class Db
 {
 
+    const OPTION_WITHOUT_FOREIGN_KEYS = 'skipForeignKeys';
+    
     private $settings = array(
         'alter_owner' => false
     );
 
     private $masterDb = null;
+    
+    private $options = array();
 
-    public function setMasrer(DbConn $db)
+    public function setMaster(DbConn $db)
     {
         $this->masterDb = $db;
     }
@@ -21,7 +25,16 @@ class Db
     {
         $this->slaveDb[] = $db;
     }
-
+    
+    public function setOptions($options)
+    {
+        $this->options = $options;
+    }
+    
+    private function getOption($key) {
+        return isset($this->options[$key]) ? $this->options[$key] : null; 
+    }
+    
     private function _buildConf(DbConn $db, $schema)
     {
         $out = array();
@@ -58,6 +71,7 @@ class Db
                 $out['tables'][$table->getName()]['columns'][$column->getName()]['precision'] = $column->getPrecision();
                 $out['tables'][$table->getName()]['columns'][$column->getName()]['nullable'] = $column->getIsNullable();
                 $out['tables'][$table->getName()]['columns'][$column->getName()]['order'] = $column->getOrder();
+                $out['tables'][$table->getName()]['columns'][$column->getName()]['default'] = $column->getDefault();
             }
             // Constraints
             foreach ((array) $table->constraints() as $constraint) {                
@@ -103,9 +117,11 @@ class Db
                 $_columns = array();
                 foreach ((array) $master['tables'][$table]['columns'] as $column => $columnConf) {
                     $type = $columnConf['type'];
-                    $precision = $columnConf['precision'];
+                    $precision = (! empty($columnConf['precision'])) ? '('.$columnConf['precision'].')' : "";
+                    $columnDefault = (! empty($columnConf['default'])) ? " DEFAULT ". $columnConf['default'] : "";
                     $nullable = $columnConf['nullable'] ? null : ' NOT NULL';
-                    $_columns[] = "{$column} {$type}" . ((! empty($precision)) ? "({$precision})" : null) . $nullable;
+                    
+                    $_columns[] = "{$column} {$type} {$precision} {$nullable } {$columnDefault}";
                 }
                 if(array_key_exists('constraints', $master['tables'][$table])) {
                     foreach ((array) $master['tables'][$table]['constraints'] as $constraint => $constraintInfo) {
@@ -124,10 +140,33 @@ class Db
                                 $_columns[] = "CONSTRAINT {$constraint} CHECK {$constraintSrc}";
                                 break;
                             case 'PRIMARY KEY':
-                                $constraintSrc = $constraintInfo['src'];
                                 $columns = implode(', ', $columns);
                                 $_columns[] = "CONSTRAINT {$constraint} PRIMARY KEY ({$columns}) ";
                                 break;
+                            case 'UNIQUE':
+                                $columns = implode(', ', $columns);
+                                $_columns[] = "CONSTRAINT {$constraint} UNIQUE ({$columns})";
+                            	break;
+                            case 'FOREIGN KEY':
+                                if($this->getOption(self::OPTION_WITHOUT_FOREIGN_KEYS)) {
+                                    $summary[] = 'Skipped FOREIGN KEY "'.$constraint.'" for table "'.$table.'". A second run without -k option is required!';
+                                } else {
+                                    $columns = implode(', ', $columns);
+                                    $fkSchema = $schema;
+                                    $fkTable = $constraintInfo['reftable'];
+                                    $fkColumns = $constraintInfo['refcolumns'];
+                                    $fkColumns = implode(', ', $fkColumns);
+                                    $match = strtoupper(Constraint::$MATCH_MAP[$constraintInfo['match_option']]);
+                                    $deleteAction = strtoupper(Constraint::$ON_ACTION_MAP[$constraintInfo['delete_option']]);
+                                    $updateAction = strtoupper(Constraint::$ON_ACTION_MAP[$constraintInfo['update_option']]);
+                                    $_columns[] = "CONSTRAINT {$constraint} FOREIGN KEY ({$columns})
+                                    REFERENCES {$fkSchema}.{$fkTable} ({$fkColumns}) MATCH {$match}
+                                    ON UPDATE {$updateAction} ON DELETE {$deleteAction}";
+                                    
+                                }
+                                
+                            	break;
+                            
                         }
                     }
                 }
@@ -272,7 +311,8 @@ class Db
     {
         if (count((array) $columns) > 0) {
             foreach ($columns as $column) {
-                $diff[] = "\nadd column {$column} to table {$table}";
+                $columnDefault = (! empty($master['tables'][$table]['columns'][$column]['default'])) ? " DEFAULT ".$master['tables'][$table]['columns'][$column]['default'] : "";
+                $diff[] = "\nadd column {$column} to table {$table}" . $columnDefault;
                 $summary['column']['create'][] = "{$schema}.{$table}.{$column}";
             }
         }
@@ -291,8 +331,10 @@ class Db
     private function _alterColumn($schema, $table, $column, $master, &$diff, &$summary)
     {
         $masterType = $master['tables'][$table]['columns'][$column]['type'];
-        $masterPrecision = $master['tables'][$table]['columns'][$column]['precision'];
-        $diff[] = "\nALTER TABLE {$schema}.{$table} ALTER {$column} TYPE {$masterType}" . (empty($masterPrecision) ? "" : ("(" . $masterPrecision . ")")) . ";";
+        $masterPrecision = (! empty($master['tables'][$table]['columns'][$column]['precision'])) ? $master['tables'][$table]['columns'][$column]['precision'] : "";
+        $columnDefault = (! empty($master['tables'][$table]['columns'][$column]['default'])) ? " SET DEFAULT ".$master['tables'][$table]['columns'][$column]['default'] : "";
+        $nullable = $master['tables'][$table]['columns'][$column]['nullable'] ? " DROP NOT NULL" : " SET NOT NULL";
+        $diff[] = "\nALTER TABLE {$schema}.{$table} ALTER {$column} TYPE {$masterType}" . "({$masterPrecision})" . $columnDefault . $nullable . ";";
         $summary['column']['alter'][] = "{$schema}.{$table} {$column}";
     }
 
@@ -382,34 +424,7 @@ class Db
                 );
             } else {
                 $diff = $summary = array();
-                
-                // FUNCTIONS
-                $masterFunctions = isset($master['functions']) ? array_keys((array) $master['functions']) : array();
-                $slaveFunctions = isset($slave['functions']) ? array_keys((array) $slave['functions']) : array();
-                // delete deleted functions
-                $deletedFunctions = array_diff($slaveFunctions, $masterFunctions);
-                if (count($deletedFunctions) > 0) {
-                    $this->_deleteFunctions($schema, $deletedFunctions, $master, $diff, $summary);
-                }
-                // create new functions
-                $newFunctions = array_diff($masterFunctions, $slaveFunctions);
-                
-                // check diferences
-                foreach ($masterFunctions as $functionName) {
-                    if (! in_array($functionName, $newFunctions)) {
-                        $definitionMaster = $master['functions'][$functionName]['definition'];
-                        $definitionSlave = $slave['functions'][$functionName]['definition'];
-                        
-                        if (md5($definitionMaster) != md5($definitionSlave)) {
-                            $newFunctions[] = $functionName;
-                        }
-                    }
-                }
-                
-                if (count($newFunctions) > 0) {
-                    $this->_createFunctions($schema, $newFunctions, $master, $diff, $summary);
-                }
-                
+               
                 // SEQUENCES
                 $masterSequences = isset($master['sequences']) ? array_keys((array) $master['sequences']) : array();
                 $slaveSequences = isset($slave['sequences']) ? array_keys((array) $slave['sequences']) : array();
@@ -425,31 +440,6 @@ class Db
                     $this->_createSequences($schema, $newSequences, $master, $diff, $summary);
                 }
                 
-                // VIEWS
-                $masterViews = isset($master['views']) ? array_keys((array) $master['views']) : array();
-                $slaveViews = isset($slave['views']) ? array_keys((array) $slave['views']) : array();
-                
-                // delete deleted views
-                $deletedViews = array_diff($slaveViews, $masterViews);
-                if (count($deletedViews) > 0) {
-                    $this->_deleteViews($schema, $deletedViews, $master, $diff, $summary);
-                }
-                
-                // create new views
-                $newViews = array_diff($masterViews, $slaveViews);
-                if (count($newViews) > 0) {
-                    $this->_createViews($schema, $newViews, $master, $diff, $summary);
-                }
-                
-                foreach ($masterViews as $view) {
-                    if (in_array($view, $newViews)) {
-                        continue;
-                    }
-                    
-                    if ($master['views'][$view]['definition'] !== $slave['views'][$view]['definition']) {
-                        $this->_createView($schema, $view, $master, $diff, $summary);
-                    }
-                }
                 // TABLES
                 
                 $masterTables = isset($master['tables']) ? array_keys((array) $master['tables']) : array();
@@ -518,6 +508,60 @@ class Db
                     }
 
                 }
+                
+                // VIEWS
+                $masterViews = isset($master['views']) ? array_keys((array) $master['views']) : array();
+                $slaveViews = isset($slave['views']) ? array_keys((array) $slave['views']) : array();
+                
+                // delete deleted views
+                $deletedViews = array_diff($slaveViews, $masterViews);
+                if (count($deletedViews) > 0) {
+                    $this->_deleteViews($schema, $deletedViews, $master, $diff, $summary);
+                }
+                
+                // create new views
+                $newViews = array_diff($masterViews, $slaveViews);
+                if (count($newViews) > 0) {
+                    $this->_createViews($schema, $newViews, $master, $diff, $summary);
+                }
+                
+                foreach ($masterViews as $view) {
+                    if (in_array($view, $newViews)) {
+                        continue;
+                    }
+                
+                    if ($master['views'][$view]['definition'] !== $slave['views'][$view]['definition']) {
+                        $this->_createView($schema, $view, $master, $diff, $summary);
+                    }
+                }
+                
+                // FUNCTIONS
+                $masterFunctions = isset($master['functions']) ? array_keys((array) $master['functions']) : array();
+                $slaveFunctions = isset($slave['functions']) ? array_keys((array) $slave['functions']) : array();
+                // delete deleted functions
+                $deletedFunctions = array_diff($slaveFunctions, $masterFunctions);
+                if (count($deletedFunctions) > 0) {
+                    $this->_deleteFunctions($schema, $deletedFunctions, $master, $diff, $summary);
+                }
+                // create new functions
+                $newFunctions = array_diff($masterFunctions, $slaveFunctions);
+                
+                // check diferences
+                foreach ($masterFunctions as $functionName) {
+                    if (! in_array($functionName, $newFunctions)) {
+                        $definitionMaster = $master['functions'][$functionName]['definition'];
+                        $definitionSlave = $slave['functions'][$functionName]['definition'];
+                
+                        if (md5($definitionMaster) != md5($definitionSlave)) {
+                            $newFunctions[] = $functionName;
+                        }
+                    }
+                }
+                
+                if (count($newFunctions) > 0) {
+                    $this->_createFunctions($schema, $newFunctions, $master, $diff, $summary);
+                }
+                
                 $out[] = array(
                     'db' => $slaveDb,
                     'diff' => $diff,
