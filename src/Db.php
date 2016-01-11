@@ -273,7 +273,7 @@ class Db
     {
         if (count((array)$columns) > 0) {
             foreach ($columns as $column) {
-                $diff[]                        = "\nadd column {$column} to table {$table}";
+                $diff[]                        = "ADD COLUMN {$column} TO TABLE {$table}";
                 $summary['column']['create'][] = "{$schema}.{$table}.{$column}";
             }
         }
@@ -283,7 +283,7 @@ class Db
     {
         if (count((array)$columns) > 0) {
             foreach ($columns as $column) {
-                $diff[]                      = "delete column {$column} to table {$table}";
+                $diff[]                      = "DELETE COLUMN {$column} TO TABLE {$table}";
                 $summary['column']['drop'][] = "{$schema}.{$table} {$column}";
             }
         }
@@ -293,7 +293,7 @@ class Db
     {
         $masterType                   = $master['tables'][$table]['columns'][$column]['type'];
         $masterPrecision              = $master['tables'][$table]['columns'][$column]['precision'];
-        $diff[]                       = "\nALTER TABLE {$schema}.{$table} ALTER {$column} TYPE {$masterType}" . (empty($masterPrecision) ? "" : ("(" . $masterPrecision . ")")) . ";";
+        $diff[]                       = "ALTER TABLE {$schema}.{$table} ALTER {$column} TYPE {$masterType}" . (empty($masterPrecision) ? "" : ("(" . $masterPrecision . ")")) . ";";
         $summary['column']['alter'][] = "{$schema}.{$table} {$column}";
     }
 
