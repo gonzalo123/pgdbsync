@@ -28,11 +28,13 @@ class Db
         $schemaDb = $db->schema($schema);
 
         // functions
+        /** @var Functiondb $function */
         foreach ((array)$schemaDb->getFunctions() as $function) {
             $out['functions'][$function->getName()]['definition'] = $function->getDefinition();
         }
 
         // Sequences
+        /** @var Sequence $sequence */
         foreach ((array)$schemaDb->getSequences() as $sequence) {
             $out['sequences'][$sequence->getName()]['owner']      = $sequence->getOwner();
             $out['sequences'][$sequence->getName()]['increment']  = $sequence->getIncrement();
@@ -47,12 +49,14 @@ class Db
         }
 
         // tables
+        /** @var Table $table */
         foreach ((array)$schemaDb->getTables() as $table) {
 
             $out['tables'][$table->getName()]['owner']      = $table->getOwner();
             $out['tables'][$table->getName()]['tablespace'] = $table->getTablespace();
             $out['tables'][$table->getName()]['oid']        = $table->getOid();
             // Columns
+            /** @var Column $column */
             foreach ((array)$table->columns() as $column) {
                 $out['tables'][$table->getName()]['columns'][$column->getName()]['type']      = $column->getType();
                 $out['tables'][$table->getName()]['columns'][$column->getName()]['precision'] = $column->getPrecision();
@@ -60,6 +64,7 @@ class Db
                 $out['tables'][$table->getName()]['columns'][$column->getName()]['order']     = $column->getOrder();
             }
             // Constraints
+            /** @var Constraint $constraint */
             foreach ((array)$table->constraints() as $constraint) {
                 $out['tables'][$table->getName()]['constraints'][$constraint->getName()]['type']          = $constraint->getType();
                 $out['tables'][$table->getName()]['constraints'][$constraint->getName()]['src']           = $constraint->getConstraint();
@@ -83,6 +88,7 @@ class Db
         }
 
         // Views
+        /** @var View $view */
         foreach ((array)$schemaDb->getViews() as $view) {
             $out['views'][$view->getName()]['owner']      = $view->getOwner();
             $out['views'][$view->getName()]['definition'] = $view->getDefinition();
@@ -327,6 +333,7 @@ class Db
         $errors = [];
         $data   = $this->_diff($schema);
         foreach ($data as $row) {
+            /** @var DbConn $db */
             $db   = $row['db'];
             $host = $db->dbHost() . " :: " . $db->dbName();
             foreach ($row['diff'] as $item) {
