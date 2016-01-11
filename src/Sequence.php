@@ -38,7 +38,6 @@ class Sequence
 
     private function getSequenceInfo($schema, $name)
     {
-        $out  = [];
         $stmt = $this->_pdo->prepare("SELECT * FROM {$this->_schema}.{$name}");
         $stmt->execute();
         $out = $stmt->fetchAll();

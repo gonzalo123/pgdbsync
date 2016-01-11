@@ -10,6 +10,7 @@ class DbConn
         $this->conf = $conf;
     }
 
+    /** @var \PDO */
     private $pdo = null;
 
     public function connect()
@@ -155,7 +156,7 @@ class DbConn
     {
         $sql = "select *, (schemaname || '.' || tablename)::regclass::oid from pg_catalog.pg_tables where schemaname=:SCHEMA order by schemaname, tablename";
         if (is_null($this->_schema)) {
-            throw new Exception("Schema must set");
+            throw new \Exception("Schema must set");
         }
         $out  = [];
         $stmt = $this->pdo->prepare($sql);

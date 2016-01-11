@@ -35,9 +35,6 @@ class Column
 
     public function getPrecision()
     {
-
-        $meta = $this->_meta;
-
         switch (strtolower($this->_meta['data_type'])) {
             case 'character varying':
                 return $this->_meta['character_maximum_length'];

@@ -51,7 +51,6 @@ class Table
 
     public function grants()
     {
-        $pdo = $this->_pdo;
         $out = [];
 
         $stmt = $this->_pdo->prepare(self::SQL_GET_GRANTS);

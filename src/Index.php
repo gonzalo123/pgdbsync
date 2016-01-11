@@ -11,5 +11,4 @@ class Index
         $this->_pdo  = $pdo;
         $this->_meta = $meta;
     }
-
 }

@@ -15,16 +15,15 @@ class View
     }
 
     const SQL_GET_GRANTS = "
-    select distinct grantee 
-		from information_schema.table_privileges  
-	where 
-	    table_schema = :SCHEMA and 
+    SELECT DISTINCT grantee
+		FROM information_schema.table_privileges
+	WHERE
+	    table_schema = :SCHEMA AND
 		table_name = :TABLE
     ";
 
     public function grants()
     {
-        $pdo = $this->_pdo;
         $out = [];
 
         $stmt = $this->_pdo->prepare(self::SQL_GET_GRANTS);
