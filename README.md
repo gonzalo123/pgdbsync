@@ -11,6 +11,7 @@ The usage of pgdbsync command line script is the following one:
  -f [from database]
  -t [to database]
  -a [action: diff | summary | run]
+ -k [skip] -> skips creation of foreign keys (i.E. if the related table does not yet exist) 
 ```
 
 ## usage examples
