@@ -17,7 +17,7 @@ class IntegrationTest extends \PHPUnit_Framework_TestCase
     public function test_compare_same_squema()
     {
         $dbVc = new Pgdbsync\Db();
-        $dbVc->setMasrer(new DbConn($this->conf['devel']));
+        $dbVc->setMaster(new DbConn($this->conf['devel']));
         $dbVc->setSlave(new DbConn($this->conf['devel']));
 
         $diff = $dbVc->raw('public');
@@ -29,7 +29,7 @@ class IntegrationTest extends \PHPUnit_Framework_TestCase
     public function test_compare_different_databases()
     {
         $dbVc = new Pgdbsync\Db();
-        $dbVc->setMasrer(new DbConn($this->conf['devel']));
+        $dbVc->setMaster(new DbConn($this->conf['devel']));
         $dbVc->setSlave(new DbConn($this->conf['devel2']));
 
         $diff = $dbVc->raw('public');

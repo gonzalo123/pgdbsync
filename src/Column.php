@@ -27,6 +27,10 @@ class Column
         return $this->_meta['ordinal_position'];
     }
 
+    public function getDefault()
+    {
+        return $this->_meta['column_default'];
+    }
 
     public function getIsNullable()
     {

@@ -4,16 +4,15 @@ namespace Pgdbsync;
 class Db
 {
 
-    const OPTION_WITHOUT_FOREIGN_KEYS = 'skipForeignKeys';
-    
+    const OPTION_WITHOUT_FOREIGN_KEYS = 'skip_foreign_keys';
+    const OPTION_ALTER_OWNER = 'alter_owner';
 
     private $settings = [
-        'alter_owner' => false
+        self::OPTION_ALTER_OWNER => false,
+        self::OPTION_WITHOUT_FOREIGN_KEYS => false
     ];
 
     private $masterDb = null;
-    
-    private $options = array();
 
     public function setMaster(DbConn $db)
     {
@@ -27,13 +26,21 @@ class Db
         $this->slaveDb[] = $db;
     }
     
-    public function setOptions($options)
+    public function setOption($key, $value)
     {
-        $this->options = $options;
+        if(array_key_exists($key, $this->settings)) {
+            $this->settings[$key] = $value;
+        }
+        return false;
     }
     
+    /**
+     * Returns a setting value if existing, else null
+     * @param string $key the settings key to get the value for
+     * @return Ambigous <NULL, multitype:boolean > the setting value if existing, else null
+     */
     private function getOption($key) {
-        return isset($this->options[$key]) ? $this->options[$key] : null; 
+        return isset($this->settings[$key]) ? $this->settings[$key] : null; 
     }
     
     private function _buildConf(DbConn $db, $schema)

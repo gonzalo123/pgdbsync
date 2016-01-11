@@ -60,18 +60,13 @@ try {
 	
 	$dbVc = new \Pgdbsync\Db();
 	if($foreignKeys == 'skip') {
-	   $options = array(
-            \Pgdbsync\Db::OPTION_WITHOUT_FOREIGN_KEYS => true
-       );
+	   $dbVc->setOption(\Pgdbsync\Db::OPTION_WITHOUT_FOREIGN_KEYS, true);
 	} elseif(empty($foreignKeys)) {
-	   $options = array(
-            \Pgdbsync\Db::OPTION_WITHOUT_FOREIGN_KEYS => false
-       );
+	   $dbVc->setOption(\Pgdbsync\Db::OPTION_WITHOUT_FOREIGN_KEYS, false);
 	} else {
 	   throw new Exception("unknown value for '-k' option: '".$foreignKeys."'. Use '-k skip' to generate SQL without foreign keys.");
 	}
 	
-	$dbVc->setOptions($options);
 	$dbVc->setMaster(new \Pgdbsync\DbConn($master));
 	if ($to == 'all') {
 		foreach ($conf as $key => $slave) {

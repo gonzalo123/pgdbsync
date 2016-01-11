@@ -17,7 +17,7 @@ class DropTableTest extends \PHPUnit_Framework_TestCase
     public function test_drop_table()
     {
         $dbVc = new Pgdbsync\Db();
-        $dbVc->setMasrer(new DbConn($this->conf['devel']));
+        $dbVc->setMaster(new DbConn($this->conf['devel']));
         $dbVc->setSlave(new DbConn($this->conf['devel2']));
 
         $diff = $dbVc->raw('public');
