@@ -177,7 +177,7 @@ class Db
     {
         if (count((array)$views) > 0) {
             foreach ($views as $view) {
-                $diff[]                     = "drop view {$schema}.{$view};";
+                $diff[]                     = "DROP VIEW {$schema}.{$view};";
                 $summary['views']['drop'][] = "{$schema}.{$view}";
             }
         }
@@ -187,7 +187,7 @@ class Db
     {
         if (count((array)$sequences) > 0) {
             foreach ($sequences as $sequence) {
-                $diff[]                        = "drop sequence {$schema}.{$sequence};";
+                $diff[]                        = "DROP SEQUENCE {$schema}.{$sequence};";
                 $summary['sequence']['drop'][] = "{$schema}.{$sequence}";
             }
         }
@@ -197,7 +197,7 @@ class Db
     {
         if (count((array)$functions) > 0) {
             foreach ($functions as $function) {
-                $diff[]                        = "drop function {$function};";
+                $diff[]                        = "DROP FUNCTION {$function};";
                 $summary['function']['drop'][] = "{$function}";
             }
         }

@@ -4,7 +4,7 @@ include_once __DIR__ . '/fixtures/Database.php';
 
 use Pgdbsync\DbConn;
 
-class NewSecuenceTest extends \PHPUnit_Framework_TestCase
+class DropSecuenceTest extends \PHPUnit_Framework_TestCase
 {
     private $database;
     private $conf;
@@ -25,12 +25,7 @@ class NewSecuenceTest extends \PHPUnit_Framework_TestCase
         $this->assertCount(1, $diff);
         $this->assertCount(1, $diff[0]['diff']);
 
-        $expected = "
-CREATE SEQUENCE public.mysecuence
-  INCREMENT 1
-  MINVALUE 1
-  MAXVALUE 9223372036854775807
-  START 1;";
+        $expected = "DROP SEQUENCE public.mysecuence;";
 
         $this->assertEquals($expected, $diff[0]['diff'][0]);
     }
@@ -38,7 +33,7 @@ CREATE SEQUENCE public.mysecuence
     public function setUp()
     {
         $this->database = new Database($this->conf);
-        $this->database->executeInDatabase('devel', function (PDO $conn) {
+        $this->database->executeInDatabase('devel2', function (PDO $conn) {
             $conn->exec("CREATE SEQUENCE mySecuence
               INCREMENT 1
               MINVALUE 1
@@ -50,7 +45,7 @@ CREATE SEQUENCE public.mysecuence
 
     public function tearDown()
     {
-        $this->database->executeInDatabase('devel', function(PDO $conn) {
+        $this->database->executeInDatabase('devel2', function(PDO $conn) {
             $conn->exec("DROP SEQUENCE mySecuence;");
         });
     }
