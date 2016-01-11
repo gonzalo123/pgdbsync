@@ -1,5 +1,6 @@
 <?php
 namespace Pgdbsync;
+
 class Index
 {
     private $_pdo  = null;

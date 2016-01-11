@@ -1,40 +1,41 @@
 <?php
 namespace Pgdbsync;
+
 class Table
 {
-    private $_pdo    = null;
-    private $_schema = null;
-    private $_tablename = null;
-    private $_owner = null;
+    private $_pdo        = null;
+    private $_schema     = null;
+    private $_tablename  = null;
+    private $_owner      = null;
     private $_tablespace = null;
-    private $_oid = null;
+    private $_oid        = null;
 
     function __construct(\PDO &$pdo, $schema, $tablename, $owner, $tablespace, $hasindexes, $dsn, $oid)
     {
-        $this->_pdo = $pdo;
+        $this->_pdo        = $pdo;
         $this->_schema     = $schema;
         $this->_tablename  = $tablename;
         $this->_owner      = $owner;
         $this->_tablespace = $tablespace;
-        $this->_dsn = $dsn;
-        $this->_oid = $oid;
+        $this->_dsn        = $dsn;
+        $this->_oid        = $oid;
     }
 
     public function getOwner()
     {
         return $this->_owner;
     }
-    
+
     public function getTablespace()
     {
         return $this->_tablespace;
     }
-    
+
     public function getName()
     {
         return $this->_tablename;
     }
-    
+
     public function getOid()
     {
         return $this->_oid;
@@ -47,24 +48,25 @@ class Table
 	    table_schema = :SCHEMA and 
 		table_name = :TABLE
     ";
-    
+
     public function grants()
     {
-    	$pdo = $this->_pdo;
-        $out = array();
-			
-		$stmt = $this->_pdo->prepare(self::SQL_GET_GRANTS);
-        $stmt->execute(array(
-        	'SCHEMA' => $this->_schema,
-        	'TABLE'  => $this->_tablename 
-        	));	
+        $pdo = $this->_pdo;
+        $out = [];
+
+        $stmt = $this->_pdo->prepare(self::SQL_GET_GRANTS);
+        $stmt->execute([
+            'SCHEMA' => $this->_schema,
+            'TABLE'  => $this->_tablename
+        ]);
 
         foreach ($stmt->fetchAll() as $row) {
-        	$out[] = $row[0];
+            $out[] = $row[0];
         }
+
         return $out;
     }
-    
+
     const SQL_GET_COLUMNS = "
 	    SELECT
 			*
@@ -75,21 +77,22 @@ class Table
 			table_name = :TABLE
 		ORDER BY
 			ordinal_position";
-    
+
     public function columns()
     {
-    	$pdo = $this->_pdo;
-        $out = array();
-			
-		$stmt = $this->_pdo->prepare(self::SQL_GET_COLUMNS);
-        $stmt->execute(array(
-        	'SCHEMA' => $this->_schema,
-        	'TABLE'  => $this->_tablename 
-        	));	
+        $pdo = $this->_pdo;
+        $out = [];
+
+        $stmt = $this->_pdo->prepare(self::SQL_GET_COLUMNS);
+        $stmt->execute([
+            'SCHEMA' => $this->_schema,
+            'TABLE'  => $this->_tablename
+        ]);
 
         foreach ($stmt->fetchAll() as $row) {
-        	$out[] = new Column($this->_pdo, $row);
+            $out[] = new Column($this->_pdo, $row);
         }
+
         return $out;
     }
 
@@ -117,25 +120,27 @@ class Table
 
     public function constraints()
     {
-    	$out = array();
+        $out  = [];
         $stmt = $this->_pdo->prepare(self::SQL_GET_CONSTRAINTS);
-        $stmt->execute(array(
-        	'SCHEMA' => $this->_schema,
-        	'TABLE'  => $this->_tablename 
-        	));
-		
+        $stmt->execute([
+            'SCHEMA' => $this->_schema,
+            'TABLE'  => $this->_tablename
+        ]);
+
         while ($row = $stmt->fetch()) {
-        	$out[] = new Constraint($this->_pdo, $row);
+            $out[] = new Constraint($this->_pdo, $row);
         }
+
         return $out;
     }
-    
-    public static function getFkReferenceData() {
-        return array(
+
+    public static function getFkReferenceData()
+    {
+        return [
             'schema',
             'table',
             'columns'
-        );
+        ];
     }
-    
+
 }

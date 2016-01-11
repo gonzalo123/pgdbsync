@@ -1,14 +1,22 @@
+pgdbsync
+===========
+
+[![Build Status](https://travis-ci.org/gonzalo123/pgdbsync.svg?branch=master)](https://travis-ci.org/gonzalo123/pgdbsync)
+
 pgdbsync allows us to track the differences in the database structure between different databases. It also create the needed script to synchronize the servers and even to run the script.
 
 The usage of pgdbsync command line script is the following one:
-
- -c [schema]
+```
+ -c [config]
  -f [from database]
  -t [to database]
  -a [action: diff | summary | run]
-usage examples
+```
 
-Summary
+## usage examples
+
+### Summary
+```
 ./pgdbsync -s web -f devel -t prod -a summary
 HOST : production :: prod1
 --------------------------------------------
@@ -20,7 +28,10 @@ view
  create :: WEB.testview
 
 [OK]  end process
-Creating diff script
+```
+
+### Creating diff script
+```
 ./pgdbsync -s wf -f devel -t prod -a diff
 HOST : production :: prod1
 --------------------------------------------
@@ -66,3 +77,4 @@ DROP TABLE web.test;
 drop view web.testview;
 
 [OK]  end process
+```

@@ -1,0 +1,18 @@
+language: php
+
+php:
+  - 5.6
+  - 7.0
+
+install:
+  - composer install
+
+script: phpunit --coverage-text
+
+services:
+  - postgresql
+
+before_script:
+  - cp tests/fixtures/conf.travis.ini tests/fixtures/conf.ini
+  - psql -c 'create database gonzalo1;' -U postgres
+  - psql -c 'create database gonzalo2;' -U postgres
