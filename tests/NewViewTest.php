@@ -14,7 +14,7 @@ class NewViewTest extends \PHPUnit_Framework_TestCase
         $this->conf = parse_ini_file(__DIR__ . "/fixtures/conf.ini", true);
     }
 
-    public function test_new_table()
+    public function test_new_view()
     {
         $dbVc = new Pgdbsync\Db();
         $dbVc->setMasrer(new DbConn($this->conf['devel']));
