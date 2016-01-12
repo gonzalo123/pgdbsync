@@ -300,10 +300,12 @@ class Db
         if ($this->settings['alter_owner'] === true) {
             $buffer .= "\nALTER TABLE {$schema}.{$view} OWNER TO {$owner};";
         }
-        foreach ($master['views'][$view]['grants'] as $grant) {
-            if (!empty($grant)) {
-                $buffer .= "\nGRANT ALL ON TABLE {$schema}.{$view} TO {$grant};";
-            }
+        if(isset($master['views'][$view]['grants'])) {
+            foreach ($master['views'][$view]['grants'] as $grant) {
+                if (!empty($grant)) {
+                    $buffer .= "\nGRANT ALL ON TABLE {$schema}.{$view} TO {$grant};";
+                }
+            }    
         }
         $diff[]                      = $buffer;
         $summary['view']['create'][] = "{$schema}.{$view}";
