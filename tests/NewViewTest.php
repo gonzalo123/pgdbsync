@@ -51,11 +51,12 @@ GRANT ALL ON TABLE public.myview TO {$user};";
                 name VARCHAR,
                 surname VARCHAR
             );");
+            $conn->exec("GRANT ALL ON TABLE public.testtable TO {$user}");
             $conn->exec("CREATE VIEW myView AS
                 SELECT *
                 FROM testTable
                 WHERE surname = 'x';");
-            $conn->exec("GRANT ALL ON TABLE public.testtable TO {$user}");
+            $conn->exec("GRANT ALL ON TABLE public.myview TO {$user}");
         });
     }
 
