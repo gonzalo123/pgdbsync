@@ -253,7 +253,7 @@ class Db
         $definition = $master['views'][$view]['definition'];
         $owner      = $master['views'][$view]['owner'];
         $buffer     = "\nCREATE OR REPLACE VIEW {$schema}.{$view} AS\n";
-        $buffer .= "  " . $definition . ";";
+        $buffer .= "  " . $definition;
         if ($this->settings['alter_owner'] === true) {
             $buffer .= "\nALTER TABLE {$schema}.{$view} OWNER TO {$owner};";
         }

@@ -34,7 +34,7 @@ CREATE OR REPLACE VIEW public.myview AS
     testtable.name,
     testtable.surname
    FROM testtable
-  WHERE ((testtable.surname)::text = 'x'::text);;
+  WHERE ((testtable.surname)::text = 'x'::text);
 GRANT ALL ON TABLE public.myview TO {$user};";
 
         $this->assertEquals(trim($expected), trim($diff[0]['diff'][0]));
