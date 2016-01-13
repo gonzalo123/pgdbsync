@@ -3,6 +3,7 @@
 include_once __DIR__ . '/fixtures/Database.php';
 
 use Pgdbsync\DbConn;
+use Pgdbsync\Db;
 
 class IntegrationTest extends \PHPUnit_Framework_TestCase
 {
@@ -16,7 +17,7 @@ class IntegrationTest extends \PHPUnit_Framework_TestCase
 
     public function test_compare_same_squema()
     {
-        $dbVc = new Pgdbsync\Db();
+        $dbVc = new Db();
         $dbVc->setMasrer(new DbConn($this->conf['devel']));
         $dbVc->setSlave(new DbConn($this->conf['devel']));
 
@@ -28,7 +29,7 @@ class IntegrationTest extends \PHPUnit_Framework_TestCase
 
     public function test_compare_different_databases()
     {
-        $dbVc = new Pgdbsync\Db();
+        $dbVc = new Db();
         $dbVc->setMasrer(new DbConn($this->conf['devel']));
         $dbVc->setSlave(new DbConn($this->conf['devel2']));
 

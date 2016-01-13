@@ -2,7 +2,11 @@
 
 include_once __DIR__ . '/fixtures/Database.php';
 
+include_once __DIR__ . '/fixtures/Database.php';
+include_once __DIR__ . '/fixtures/StringParser.php';
+
 use Pgdbsync\DbConn;
+use Pgdbsync\Db;
 
 class TableColumnTest extends \PHPUnit_Framework_TestCase
 {
@@ -16,7 +20,7 @@ class TableColumnTest extends \PHPUnit_Framework_TestCase
 
     public function test_table_with_different_colums_databases()
     {
-        $dbVc = new Pgdbsync\Db();
+        $dbVc = new Db();
         $dbVc->setMasrer(new DbConn($this->conf['devel']));
         $dbVc->setSlave(new DbConn($this->conf['devel2']));
 

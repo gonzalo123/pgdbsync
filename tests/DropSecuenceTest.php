@@ -3,6 +3,7 @@
 include_once __DIR__ . '/fixtures/Database.php';
 
 use Pgdbsync\DbConn;
+use Pgdbsync\Db;
 
 class DropSecuenceTest extends \PHPUnit_Framework_TestCase
 {
@@ -16,7 +17,7 @@ class DropSecuenceTest extends \PHPUnit_Framework_TestCase
 
     public function test_new_sequence()
     {
-        $dbVc = new Pgdbsync\Db();
+        $dbVc = new Db();
         $dbVc->setMasrer(new DbConn($this->conf['devel']));
         $dbVc->setSlave(new DbConn($this->conf['devel2']));
 
@@ -25,9 +26,7 @@ class DropSecuenceTest extends \PHPUnit_Framework_TestCase
         $this->assertCount(1, $diff);
         $this->assertCount(1, $diff[0]['diff']);
 
-        $expected = "DROP SEQUENCE public.mysecuence;";
-
-        $this->assertEquals($expected, $diff[0]['diff'][0]);
+        $this->assertEquals( "DROP SEQUENCE public.mysecuence;", $diff[0]['diff'][0]);
     }
 
     public function setUp()

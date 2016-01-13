@@ -1,8 +1,10 @@
 <?php
 
 include_once __DIR__ . '/fixtures/Database.php';
+include_once __DIR__ . '/fixtures/StringParser.php';
 
 use Pgdbsync\DbConn;
+use Pgdbsync\Db;
 
 class NewViewTest extends \PHPUnit_Framework_TestCase
 {
@@ -16,7 +18,7 @@ class NewViewTest extends \PHPUnit_Framework_TestCase
 
     public function test_new_view()
     {
-        $dbVc = new Pgdbsync\Db();
+        $dbVc = new Db();
         $dbVc->setMasrer(new DbConn($this->conf['devel']));
         $dbVc->setSlave(new DbConn($this->conf['devel2']));
 
@@ -25,7 +27,6 @@ class NewViewTest extends \PHPUnit_Framework_TestCase
 
         $this->assertCount(1, $diff);
         $this->assertCount(2, $diff[0]['diff']);
-
 
         $expected = "
 CREATE OR REPLACE VIEW public.myview AS
@@ -37,7 +38,7 @@ CREATE OR REPLACE VIEW public.myview AS
   WHERE ((testtable.surname)::text = 'x'::text);
 GRANT ALL ON TABLE public.myview TO {$user};";
 
-        $this->assertEquals(trim($expected), trim($diff[0]['diff'][0]));
+        $this->assertEquals(StringParser::trimLines($expected), StringParser::trimLines($diff[0]['diff'][0]));
     }
 
     public function setUp()

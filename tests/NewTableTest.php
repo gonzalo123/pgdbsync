@@ -2,7 +2,11 @@
 
 include_once __DIR__ . '/fixtures/Database.php';
 
+include_once __DIR__ . '/fixtures/Database.php';
+include_once __DIR__ . '/fixtures/StringParser.php';
+
 use Pgdbsync\DbConn;
+use Pgdbsync\Db;
 
 class NewTableTest extends \PHPUnit_Framework_TestCase
 {
@@ -16,7 +20,7 @@ class NewTableTest extends \PHPUnit_Framework_TestCase
 
     public function test_new_table()
     {
-        $dbVc = new Pgdbsync\Db();
+        $dbVc = new Db();
         $dbVc->setMasrer(new DbConn($this->conf['devel']));
         $dbVc->setSlave(new DbConn($this->conf['devel2']));
 
@@ -37,7 +41,7 @@ CREATE TABLE public.testtable(
 );
 GRANT ALL ON TABLE public.testtable TO {$user};";
 
-        $this->assertEquals($expected, $diff[0]['diff'][0]);
+        $this->assertEquals(StringParser::trimLines($expected), StringParser::trimLines($diff[0]['diff'][0]));
     }
 
     public function setUp()
