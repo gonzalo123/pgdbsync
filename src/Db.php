@@ -1,9 +1,10 @@
 <?php
 namespace Pgdbsync;
 
+use Pgdbsync\Builder\Conf;
+
 class Db
 {
-
     private $settings = [
         'alter_owner' => false
     ];
@@ -24,82 +25,7 @@ class Db
 
     private function buildConf(DbConn $db, $schema)
     {
-        $out      = [];
-        $schemaDb = $db->schema($schema);
-
-        // functions
-        /** @var Functiondb $function */
-        foreach ((array)$schemaDb->getFunctions() as $function) {
-            $out['functions'][$function->getName()]['definition'] = $function->getDefinition();
-        }
-
-        // Sequences
-        /** @var Sequence $sequence */
-        foreach ((array)$schemaDb->getSequences() as $sequence) {
-            $out['sequences'][$sequence->getName()]['owner']      = $sequence->getOwner();
-            $out['sequences'][$sequence->getName()]['increment']  = $sequence->getIncrement();
-            $out['sequences'][$sequence->getName()]['minvalue']   = $sequence->getMinValue();
-            $out['sequences'][$sequence->getName()]['maxvalue']   = $sequence->getMaxValue();
-            $out['sequences'][$sequence->getName()]['startvalue'] = $sequence->getStartValue();
-
-            // Grants
-            foreach ((array)$sequence->grants() as $grant) {
-                $out['sequences'][$sequence->getName()]['grants'][$grant] = $grant;
-            }
-        }
-
-        // tables
-        /** @var Table $table */
-        foreach ((array)$schemaDb->getTables() as $table) {
-
-            $out['tables'][$table->getName()]['owner']      = $table->getOwner();
-            $out['tables'][$table->getName()]['tablespace'] = $table->getTablespace();
-            $out['tables'][$table->getName()]['oid']        = $table->getOid();
-            // Columns
-            /** @var Column $column */
-            foreach ((array)$table->columns() as $column) {
-                $out['tables'][$table->getName()]['columns'][$column->getName()]['type']      = $column->getType();
-                $out['tables'][$table->getName()]['columns'][$column->getName()]['precision'] = $column->getPrecision();
-                $out['tables'][$table->getName()]['columns'][$column->getName()]['nullable']  = $column->getIsNullable();
-                $out['tables'][$table->getName()]['columns'][$column->getName()]['order']     = $column->getOrder();
-            }
-            // Constraints
-            /** @var Constraint $constraint */
-            foreach ((array)$table->constraints() as $constraint) {
-                $out['tables'][$table->getName()]['constraints'][$constraint->getName()]['type']          = $constraint->getType();
-                $out['tables'][$table->getName()]['constraints'][$constraint->getName()]['src']           = $constraint->getConstraint();
-                $out['tables'][$table->getName()]['constraints'][$constraint->getName()]['columns']       = $constraint->getColumns();
-                $out['tables'][$table->getName()]['constraints'][$constraint->getName()]['reftable']      = $constraint->getReftable();
-                $out['tables'][$table->getName()]['constraints'][$constraint->getName()]['delete_option'] = $constraint->getOnDeleteOption();
-                $out['tables'][$table->getName()]['constraints'][$constraint->getName()]['update_option'] = $constraint->getOnUpdateOption();
-                $out['tables'][$table->getName()]['constraints'][$constraint->getName()]['match_option']  = $constraint->getMatchOption();
-                if (!isset($out['tables'][$table->getName()]['constraints'][$constraint->getName()]['refcolumns'])) {
-                    $out['tables'][$table->getName()]['constraints'][$constraint->getName()]['refcolumns'] = [];
-                }
-                if (!in_array($constraint->getRefcolumn(), $out['tables'][$table->getName()]['constraints'][$constraint->getName()]['refcolumns'])) {
-                    $out['tables'][$table->getName()]['constraints'][$constraint->getName()]['refcolumns'][] = $constraint->getRefcolumn();
-                }
-
-            }
-            // Grants
-            foreach ((array)$table->grants() as $grant) {
-                $out['tables'][$table->getName()]['grants'][$grant] = $grant;
-            }
-        }
-
-        // Views
-        /** @var View $view */
-        foreach ((array)$schemaDb->getViews() as $view) {
-            $out['views'][$view->getName()]['owner']      = $view->getOwner();
-            $out['views'][$view->getName()]['definition'] = $view->getDefinition();
-
-            // Grants
-            foreach ((array)$view->grants() as $grant) {
-                $out['views'][$view->getName()]['grants'][$grant] = $grant;
-            }
-        }
-
-        return $out;
+        return (new Conf($db))->build($schema);
     }
 
     private function createTables($schema, $tables, $master, &$diff, &$summary)
