@@ -22,7 +22,7 @@ class Db
         $this->slaveDb[] = $db;
     }
 
-    private function _buildConf(DbConn $db, $schema)
+    private function buildConf(DbConn $db, $schema)
     {
         $out      = [];
         $schemaDb = $db->schema($schema);
@@ -102,7 +102,7 @@ class Db
         return $out;
     }
 
-    private function _createTables($schema, $tables, $master, &$diff, &$summary)
+    private function createTables($schema, $tables, $master, &$diff, &$summary)
     {
         if (count((array)$tables) > 0) {
             foreach ($tables as $table) {
@@ -163,7 +163,7 @@ class Db
         }
     }
 
-    private function _deleteTables($schema, $tables, $master, &$diff, &$summary)
+    private function deleteTables($schema, $tables, $master, &$diff, &$summary)
     {
         if (count((array)$tables) > 0) {
             foreach ($tables as $table) {
@@ -173,7 +173,7 @@ class Db
         }
     }
 
-    private function _deleteViews($schema, $views, $master, &$diff, &$summary)
+    private function deleteViews($schema, $views, $master, &$diff, &$summary)
     {
         if (count((array)$views) > 0) {
             foreach ($views as $view) {
@@ -183,7 +183,7 @@ class Db
         }
     }
 
-    private function _deleteSequences($schema, $sequences, $master, &$diff, &$summary)
+    private function deleteSequences($schema, $sequences, $master, &$diff, &$summary)
     {
         if (count((array)$sequences) > 0) {
             foreach ($sequences as $sequence) {
@@ -193,7 +193,7 @@ class Db
         }
     }
 
-    private function _deleteFunctions($schema, $functions, $master, &$diff, &$summary)
+    private function deleteFunctions($schema, $functions, $master, &$diff, &$summary)
     {
         if (count((array)$functions) > 0) {
             foreach ($functions as $function) {
@@ -203,7 +203,7 @@ class Db
         }
     }
 
-    private function _createFunctions($schema, $functions, $master, &$diff, &$summary)
+    private function createFunctions($schema, $functions, $master, &$diff, &$summary)
     {
         if (count((array)$functions) > 0) {
             foreach ($functions as $function) {
@@ -214,16 +214,16 @@ class Db
         }
     }
 
-    private function _createSequences($schema, $sequences, $master, &$diff, &$summary)
+    private function createSequences($schema, $sequences, $master, &$diff, &$summary)
     {
         if (count((array)$sequences) > 0) {
             foreach ($sequences as $sequence) {
-                $this->_createSequence($schema, $sequence, $master, $diff, $summary);
+                $this->createSequence($schema, $sequence, $master, $diff, $summary);
             }
         }
     }
 
-    private function _createSequence($schema, $sequence, $master, &$diff, &$summary)
+    private function createSequence($schema, $sequence, $master, &$diff, &$summary)
     {
         $increment = $master['sequences'][$sequence]['increment'];
         $minvalue  = $master['sequences'][$sequence]['minvalue'];
@@ -248,7 +248,7 @@ class Db
         $summary['secuence']['create'][] = "{$schema}.{$sequence}";
     }
 
-    private function _createView($schema, $view, $master, &$diff, &$summary)
+    private function createView($schema, $view, $master, &$diff, &$summary)
     {
         $definition = $master['views'][$view]['definition'];
         $owner      = $master['views'][$view]['owner'];
@@ -266,16 +266,16 @@ class Db
         $summary['view']['create'][] = "{$schema}.{$view}";
     }
 
-    private function _createViews($schema, $views, $master, &$diff, &$summary)
+    private function createViews($schema, $views, $master, &$diff, &$summary)
     {
         if (count((array)$views) > 0) {
             foreach ($views as $view) {
-                $this->_createView($schema, $view, $master, $diff, $summary);
+                $this->createView($schema, $view, $master, $diff, $summary);
             }
         }
     }
 
-    private function _addColumns($schema, $table, $columns, $master, &$diff, &$summary)
+    private function addColumns($schema, $table, $columns, $master, &$diff, &$summary)
     {
         if (count((array)$columns) > 0) {
             foreach ($columns as $column) {
@@ -285,7 +285,7 @@ class Db
         }
     }
 
-    private function _deleteColumns($schema, $table, $columns, $master, &$diff, &$summary)
+    private function deleteColumns($schema, $table, $columns, $master, &$diff, &$summary)
     {
         if (count((array)$columns) > 0) {
             foreach ($columns as $column) {
@@ -295,7 +295,7 @@ class Db
         }
     }
 
-    private function _alterColumn($schema, $table, $column, $master, &$diff, &$summary)
+    private function alterColumn($schema, $table, $column, $master, &$diff, &$summary)
     {
         $masterType                   = $master['tables'][$table]['columns'][$column]['type'];
         $masterPrecision              = $master['tables'][$table]['columns'][$column]['precision'];
@@ -306,7 +306,7 @@ class Db
     public function summary($schema)
     {
         $buffer = [];
-        $data   = $this->_diff($schema);
+        $data   = $this->createDiff($schema);
         foreach ($data as $row) {
             if (count($row['summary']) > 0) {
                 $title    = "DBNAME : " . $row['db']->dbName();
@@ -331,7 +331,7 @@ class Db
     public function run($schema)
     {
         $errors = [];
-        $data   = $this->_diff($schema);
+        $data   = $this->createDiff($schema);
         foreach ($data as $row) {
             /** @var DbConn $db */
             $db   = $row['db'];
@@ -353,13 +353,13 @@ class Db
 
     public function raw($schema)
     {
-        return $this->_diff($schema);
+        return $this->createDiff($schema);
     }
 
     public function diff($schema)
     {
         $buffer = [];
-        $data   = $this->_diff($schema);
+        $data   = $this->createDiff($schema);
         foreach ($data as $row) {
             if (count($row['diff']) > 0) {
                 $title    = "DBNAME : " . $row['db']->dbName();
@@ -378,12 +378,12 @@ class Db
         return implode("\n", $buffer) . "\n";
     }
 
-    private function _diff($schema)
+    private function createDiff($schema)
     {
         $out    = [];
-        $master = $this->_buildConf($this->masterDb->connect(), $schema);
+        $master = $this->buildConf($this->masterDb->connect(), $schema);
         foreach ($this->slaveDb as $slaveDb) {
-            $slave = $this->_buildConf($slaveDb->connect(), $schema);
+            $slave = $this->buildConf($slaveDb->connect(), $schema);
             if (md5(serialize($master)) == md5(serialize($slave))) {
                 // echo "[OK] <b>{$schema}</b> " . $slaveDb->dbName() . "<br/>";
                 $out[] = [
@@ -400,7 +400,7 @@ class Db
                 // delete deleted functions
                 $deletedFunctions = array_diff($slaveFunctions, $masterFunctions);
                 if (count($deletedFunctions) > 0) {
-                    $this->_deleteFunctions($schema, $deletedFunctions, $master, $diff, $summary);
+                    $this->deleteFunctions($schema, $deletedFunctions, $master, $diff, $summary);
                 }
                 // create new functions
                 $newFunctions = array_diff($masterFunctions, $slaveFunctions);
@@ -418,7 +418,7 @@ class Db
                 }
 
                 if (count($newFunctions) > 0) {
-                    $this->_createFunctions($schema, $newFunctions, $master, $diff, $summary);
+                    $this->createFunctions($schema, $newFunctions, $master, $diff, $summary);
                 }
 
                 // SEQUENCES
@@ -428,12 +428,12 @@ class Db
                 // delete deleted sequences
                 $deletedSequences = array_diff($slaveSequences, $masterSequences);
                 if (count($deletedSequences) > 0) {
-                    $this->_deleteSequences($schema, $deletedSequences, $master, $diff, $summary);
+                    $this->deleteSequences($schema, $deletedSequences, $master, $diff, $summary);
                 }
                 // create new sequences
                 $newSequences = array_diff($masterSequences, $slaveSequences);
                 if (count($newSequences) > 0) {
-                    $this->_createSequences($schema, $newSequences, $master, $diff, $summary);
+                    $this->createSequences($schema, $newSequences, $master, $diff, $summary);
                 }
 
                 // VIEWS
@@ -443,13 +443,13 @@ class Db
                 // delete deleted views
                 $deletedViews = array_diff($slaveViews, $masterViews);
                 if (count($deletedViews) > 0) {
-                    $this->_deleteViews($schema, $deletedViews, $master, $diff, $summary);
+                    $this->deleteViews($schema, $deletedViews, $master, $diff, $summary);
                 }
 
                 // create new views
                 $newViews = array_diff($masterViews, $slaveViews);
                 if (count($newViews) > 0) {
-                    $this->_createViews($schema, $newViews, $master, $diff, $summary);
+                    $this->createViews($schema, $newViews, $master, $diff, $summary);
                 }
 
                 foreach ($masterViews as $view) {
@@ -458,7 +458,7 @@ class Db
                     }
 
                     if ($master['views'][$view]['definition'] !== $slave['views'][$view]['definition']) {
-                        $this->_createView($schema, $view, $master, $diff, $summary);
+                        $this->createView($schema, $view, $master, $diff, $summary);
                     }
                 }
                 // TABLES
@@ -469,13 +469,13 @@ class Db
                 // delete deleted tables
                 $deletedTables = array_diff($slaveTables, $masterTables);
                 if (count($deletedTables) > 0) {
-                    $this->_deleteTables($schema, $deletedTables, $master, $diff, $summary);
+                    $this->deleteTables($schema, $deletedTables, $master, $diff, $summary);
                 }
 
                 // create new tables
                 $newTables = array_diff($masterTables, $slaveTables);
                 if (count($newTables) > 0) {
-                    $this->_createTables($schema, $newTables, $master, $diff, $summary);
+                    $this->createTables($schema, $newTables, $master, $diff, $summary);
                 }
 
                 foreach ($masterTables as $table) {
@@ -490,11 +490,11 @@ class Db
 
                     $newColumns = array_diff($masterColumns, $slaveColumns);
                     if (count($newColumns) > 0) {
-                        $this->_addColumns($schema, $table, $newColumns, $master, $diff, $summary);
+                        $this->addColumns($schema, $table, $newColumns, $master, $diff, $summary);
                     }
 
                     $deletedColumns = array_diff($slaveColumns, $masterColumns);
-                    $this->_deleteColumns($schema, $table, $deletedColumns, $master, $diff, $summary);
+                    $this->deleteColumns($schema, $table, $deletedColumns, $master, $diff, $summary);
 
                     foreach ($masterColumns as $column) {
                         // check modifications (different between $master and $slave)
@@ -507,7 +507,7 @@ class Db
                             $slavePrecission  = $slave['tables'][$table]['columns'][$column]['precision'];
 
                             if ($masterType != $slaveType || $masterPrecission != $slavePrecission) {
-                                $this->_alterColumn($schema, $table, $column, $master, $diff, $summary);
+                                $this->alterColumn($schema, $table, $column, $master, $diff, $summary);
                             }
                         }
                     }
@@ -522,7 +522,7 @@ class Db
                             $this->_dropConstraint($schema, $table, $deletedConstraint, $diff, $summary);
                         }
                     }
-                    // then add the new constraints                    
+                    // then add the new constraints
                     $newConstraints = array_diff($masterConstraints, $slaveConstraints);
                     if (count($newConstraints) > 0) {
                         foreach ($newConstraints as $newConstraint) {
