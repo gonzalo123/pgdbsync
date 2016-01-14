@@ -23,12 +23,12 @@ class Db
         $this->slaveDb[] = $db;
     }
 
-    private function buildConf(DbConn $db, $schema)
+    private function buildConf(DbConn $db)
     {
-        return (new Conf($db))->build($schema);
+        return (new Conf($db))->build($this->schema);
     }
 
-    private function createTables($schema, $tables, $master, &$diff, &$summary)
+    private function createTables($tables, $master, &$diff, &$summary)
     {
         if (count((array)$tables) > 0) {
             foreach ($tables as $table) {
@@ -66,60 +66,60 @@ class Db
                 }
                 $owner   = $master['tables'][$table]['owner'];
                 $columns = implode(",\n ", $_columns);
-                $buffer  = "\nCREATE TABLE {$schema}.{$table}(\n {$columns}\n)";
+                $buffer  = "\nCREATE TABLE {$this->schema}.{$table}(\n {$columns}\n)";
                 if (!empty($tablespace)) {
                     $buffer .= "\nTABLESPACE {$tablespace}";
                 }
                 $buffer .= ";";
 
                 if ($this->settings['alter_owner'] === true) {
-                    $buffer .= "\nALTER TABLE {$schema}.{$table} OWNER TO {$owner};";
+                    $buffer .= "\nALTER TABLE {$this->schema}.{$table} OWNER TO {$owner};";
                 }
 
                 if (array_key_exists('grants', $master['tables'][$table])) {
                     foreach ((array)$master['tables'][$table]['grants'] as $grant) {
                         if (!empty($grant)) {
-                            $buffer .= "\nGRANT ALL ON TABLE {$schema}.{$table} TO {$grant};";
+                            $buffer .= "\nGRANT ALL ON TABLE {$this->schema}.{$table} TO {$grant};";
                         }
                     }
                 }
                 $diff[]                        = $buffer;
-                $summary['tables']['create'][] = "{$schema}.{$table}";
+                $summary['tables']['create'][] = "{$this->schema}.{$table}";
             }
         }
     }
 
-    private function deleteTables($schema, $tables, $master, &$diff, &$summary)
+    private function deleteTables($tables, $master, &$diff, &$summary)
     {
         if (count((array)$tables) > 0) {
             foreach ($tables as $table) {
-                $diff[]                      = "\nDROP TABLE {$schema}.{$table};";
-                $summary['tables']['drop'][] = "{$schema}.{$table}";
+                $diff[]                      = "\nDROP TABLE {$this->schema}.{$table};";
+                $summary['tables']['drop'][] = "{$this->schema}.{$table}";
             }
         }
     }
 
-    private function deleteViews($schema, $views, $master, &$diff, &$summary)
+    private function deleteViews($views, $master, &$diff, &$summary)
     {
         if (count((array)$views) > 0) {
             foreach ($views as $view) {
-                $diff[]                     = "DROP VIEW {$schema}.{$view};";
-                $summary['views']['drop'][] = "{$schema}.{$view}";
+                $diff[]                     = "DROP VIEW {$this->schema}.{$view};";
+                $summary['views']['drop'][] = "{$this->schema}.{$view}";
             }
         }
     }
 
-    private function deleteSequences($schema, $sequences, $master, &$diff, &$summary)
+    private function deleteSequences($sequences, $master, &$diff, &$summary)
     {
         if (count((array)$sequences) > 0) {
             foreach ($sequences as $sequence) {
-                $diff[]                        = "DROP SEQUENCE {$schema}.{$sequence};";
-                $summary['sequence']['drop'][] = "{$schema}.{$sequence}";
+                $diff[]                        = "DROP SEQUENCE {$this->schema}.{$sequence};";
+                $summary['sequence']['drop'][] = "{$this->schema}.{$sequence}";
             }
         }
     }
 
-    private function deleteFunctions($schema, $functions, $master, &$diff, &$summary)
+    private function deleteFunctions($functions, $master, &$diff, &$summary)
     {
         if (count((array)$functions) > 0) {
             foreach ($functions as $function) {
@@ -129,27 +129,27 @@ class Db
         }
     }
 
-    private function createFunctions($schema, $functions, $master, &$diff, &$summary)
+    private function createFunctions($functions, $master, &$diff, &$summary)
     {
         if (count((array)$functions) > 0) {
             foreach ($functions as $function) {
                 $buffer                          = $master['functions'][$function]['definition'];
-                $summary['function']['create'][] = "{$schema}.{$function}";
+                $summary['function']['create'][] = "{$this->schema}.{$function}";
                 $diff[]                          = $buffer;
             }
         }
     }
 
-    private function createSequences($schema, $sequences, $master, &$diff, &$summary)
+    private function createSequences($sequences, $master, &$diff, &$summary)
     {
         if (count((array)$sequences) > 0) {
             foreach ($sequences as $sequence) {
-                $this->createSequence($schema, $sequence, $master, $diff, $summary);
+                $this->createSequence($sequence, $master, $diff, $summary);
             }
         }
     }
 
-    private function createSequence($schema, $sequence, $master, &$diff, &$summary)
+    private function createSequence($sequence, $master, &$diff, &$summary)
     {
         $increment = $master['sequences'][$sequence]['increment'];
         $minvalue  = $master['sequences'][$sequence]['minvalue'];
@@ -157,82 +157,83 @@ class Db
         $start     = $master['sequences'][$sequence]['startvalue'];
 
         $owner  = $master['sequences'][$sequence]['owner'];
-        $buffer = "\nCREATE SEQUENCE {$schema}.{$sequence}";
+        $buffer = "\nCREATE SEQUENCE {$this->schema}.{$sequence}";
         $buffer .= "\n  INCREMENT {$increment}";
         $buffer .= "\n  MINVALUE {$minvalue}";
         $buffer .= "\n  MAXVALUE {$maxvalue}";
         $buffer .= "\n  START 1;";
         if ($this->settings['alter_owner'] === true) {
-            $buffer .= "\nALTER TABLE {$schema}.{$sequence} OWNER TO {$owner};";
+            $buffer .= "\nALTER TABLE {$this->schema}.{$sequence} OWNER TO {$owner};";
         }
         foreach ($master['sequences'][$sequence]['grants'] as $grant) {
             if (!empty($grant)) {
-                $buffer .= "\nGRANT ALL ON TABLE {$schema}.{$sequence} TO {$grant};";
+                $buffer .= "\nGRANT ALL ON TABLE {$this->schema}.{$sequence} TO {$grant};";
             }
         }
         $diff[]                          = $buffer;
-        $summary['secuence']['create'][] = "{$schema}.{$sequence}";
+        $summary['secuence']['create'][] = "{$this->schema}.{$sequence}";
     }
 
-    private function createView($schema, $view, $master, &$diff, &$summary)
+    private function createView($view, $master, &$diff, &$summary)
     {
         $definition = $master['views'][$view]['definition'];
         $owner      = $master['views'][$view]['owner'];
-        $buffer     = "\nCREATE OR REPLACE VIEW {$schema}.{$view} AS\n";
+        $buffer     = "\nCREATE OR REPLACE VIEW {$this->schema}.{$view} AS\n";
         $buffer .= "  " . $definition;
         if ($this->settings['alter_owner'] === true) {
-            $buffer .= "\nALTER TABLE {$schema}.{$view} OWNER TO {$owner};";
+            $buffer .= "\nALTER TABLE {$this->schema}.{$view} OWNER TO {$owner};";
         }
         foreach ($master['views'][$view]['grants'] as $grant) {
             if (!empty($grant)) {
-                $buffer .= "\nGRANT ALL ON TABLE {$schema}.{$view} TO {$grant};";
+                $buffer .= "\nGRANT ALL ON TABLE {$this->schema}.{$view} TO {$grant};";
             }
         }
         $diff[]                      = $buffer;
-        $summary['view']['create'][] = "{$schema}.{$view}";
+        $summary['view']['create'][] = "{$this->schema}.{$view}";
     }
 
-    private function createViews($schema, $views, $master, &$diff, &$summary)
+    private function createViews($views, $master, &$diff, &$summary)
     {
         if (count((array)$views) > 0) {
             foreach ($views as $view) {
-                $this->createView($schema, $view, $master, $diff, $summary);
+                $this->createView($view, $master, $diff, $summary);
             }
         }
     }
 
-    private function addColumns($schema, $table, $columns, $master, &$diff, &$summary)
+    private function addColumns($table, $columns, $master, &$diff, &$summary)
     {
         if (count((array)$columns) > 0) {
             foreach ($columns as $column) {
                 $diff[]                        = "ADD COLUMN {$column} TO TABLE {$table}";
-                $summary['column']['create'][] = "{$schema}.{$table}.{$column}";
+                $summary['column']['create'][] = "{$this->schema}.{$table}.{$column}";
             }
         }
     }
 
-    private function deleteColumns($schema, $table, $columns, $master, &$diff, &$summary)
+    private function deleteColumns($table, $columns, $master, &$diff, &$summary)
     {
         if (count((array)$columns) > 0) {
             foreach ($columns as $column) {
                 $diff[]                      = "DELETE COLUMN {$column} TO TABLE {$table}";
-                $summary['column']['drop'][] = "{$schema}.{$table} {$column}";
+                $summary['column']['drop'][] = "{$this->schema}.{$table} {$column}";
             }
         }
     }
 
-    private function alterColumn($schema, $table, $column, $master, &$diff, &$summary)
+    private function alterColumn($table, $column, $master, &$diff, &$summary)
     {
         $masterType                   = $master['tables'][$table]['columns'][$column]['type'];
         $masterPrecision              = $master['tables'][$table]['columns'][$column]['precision'];
-        $diff[]                       = "ALTER TABLE {$schema}.{$table} ALTER {$column} TYPE {$masterType}" . (empty($masterPrecision) ? "" : ("(" . $masterPrecision . ")")) . ";";
-        $summary['column']['alter'][] = "{$schema}.{$table} {$column}";
+        $diff[]                       = "ALTER TABLE {$this->schema}.{$table} ALTER {$column} TYPE {$masterType}" . (empty($masterPrecision) ? "" : ("(" . $masterPrecision . ")")) . ";";
+        $summary['column']['alter'][] = "{$this->schema}.{$table} {$column}";
     }
 
     public function summary($schema)
     {
+        $this->schema = $schema;
         $buffer = [];
-        $data   = $this->createDiff($schema);
+        $data   = $this->createDiff();
         foreach ($data as $row) {
             if (count($row['summary']) > 0) {
                 $title    = "DBNAME : " . $row['db']->dbName();
@@ -256,8 +257,9 @@ class Db
 
     public function run($schema)
     {
+        $this->schema = $schema;
         $errors = [];
-        $data   = $this->createDiff($schema);
+        $data   = $this->createDiff();
         foreach ($data as $row) {
             /** @var DbConn $db */
             $db   = $row['db'];
@@ -279,13 +281,15 @@ class Db
 
     public function raw($schema)
     {
-        return $this->createDiff($schema);
+        $this->schema = $schema;
+        return $this->createDiff();
     }
 
     public function diff($schema)
     {
+        $this->schema = $schema;
         $buffer = [];
-        $data   = $this->createDiff($schema);
+        $data   = $this->createDiff();
         foreach ($data as $row) {
             if (count($row['diff']) > 0) {
                 $title    = "DBNAME : " . $row['db']->dbName();
@@ -304,14 +308,14 @@ class Db
         return implode("\n", $buffer) . "\n";
     }
 
-    private function createDiff($schema)
+    private function createDiff()
     {
         $out    = [];
-        $master = $this->buildConf($this->masterDb->connect(), $schema);
+        $master = $this->buildConf($this->masterDb->connect(), $this->schema);
         foreach ($this->slaveDb as $slaveDb) {
-            $slave = $this->buildConf($slaveDb->connect(), $schema);
+            $slave = $this->buildConf($slaveDb->connect(), $this->schema);
             if (md5(serialize($master)) == md5(serialize($slave))) {
-                // echo "[OK] <b>{$schema}</b> " . $slaveDb->dbName() . "<br/>";
+                // echo "[OK] <b>{$this->schema}</b> " . $slaveDb->dbName() . "<br/>";
                 $out[] = [
                     'db'      => $slaveDb,
                     'diff'    => [],
@@ -326,7 +330,7 @@ class Db
                 // delete deleted functions
                 $deletedFunctions = array_diff($slaveFunctions, $masterFunctions);
                 if (count($deletedFunctions) > 0) {
-                    $this->deleteFunctions($schema, $deletedFunctions, $master, $diff, $summary);
+                    $this->deleteFunctions($deletedFunctions, $master, $diff, $summary);
                 }
                 // create new functions
                 $newFunctions = array_diff($masterFunctions, $slaveFunctions);
@@ -344,7 +348,7 @@ class Db
                 }
 
                 if (count($newFunctions) > 0) {
-                    $this->createFunctions($schema, $newFunctions, $master, $diff, $summary);
+                    $this->createFunctions($newFunctions, $master, $diff, $summary);
                 }
 
                 // SEQUENCES
@@ -354,12 +358,12 @@ class Db
                 // delete deleted sequences
                 $deletedSequences = array_diff($slaveSequences, $masterSequences);
                 if (count($deletedSequences) > 0) {
-                    $this->deleteSequences($schema, $deletedSequences, $master, $diff, $summary);
+                    $this->deleteSequences($deletedSequences, $master, $diff, $summary);
                 }
                 // create new sequences
                 $newSequences = array_diff($masterSequences, $slaveSequences);
                 if (count($newSequences) > 0) {
-                    $this->createSequences($schema, $newSequences, $master, $diff, $summary);
+                    $this->createSequences($newSequences, $master, $diff, $summary);
                 }
 
                 // VIEWS
@@ -369,13 +373,13 @@ class Db
                 // delete deleted views
                 $deletedViews = array_diff($slaveViews, $masterViews);
                 if (count($deletedViews) > 0) {
-                    $this->deleteViews($schema, $deletedViews, $master, $diff, $summary);
+                    $this->deleteViews($deletedViews, $master, $diff, $summary);
                 }
 
                 // create new views
                 $newViews = array_diff($masterViews, $slaveViews);
                 if (count($newViews) > 0) {
-                    $this->createViews($schema, $newViews, $master, $diff, $summary);
+                    $this->createViews($newViews, $master, $diff, $summary);
                 }
 
                 foreach ($masterViews as $view) {
@@ -384,7 +388,7 @@ class Db
                     }
 
                     if ($master['views'][$view]['definition'] !== $slave['views'][$view]['definition']) {
-                        $this->createView($schema, $view, $master, $diff, $summary);
+                        $this->createView($view, $master, $diff, $summary);
                     }
                 }
                 // TABLES
@@ -395,13 +399,13 @@ class Db
                 // delete deleted tables
                 $deletedTables = array_diff($slaveTables, $masterTables);
                 if (count($deletedTables) > 0) {
-                    $this->deleteTables($schema, $deletedTables, $master, $diff, $summary);
+                    $this->deleteTables($deletedTables, $master, $diff, $summary);
                 }
 
                 // create new tables
                 $newTables = array_diff($masterTables, $slaveTables);
                 if (count($newTables) > 0) {
-                    $this->createTables($schema, $newTables, $master, $diff, $summary);
+                    $this->createTables($newTables, $master, $diff, $summary);
                 }
 
                 foreach ($masterTables as $table) {
@@ -416,11 +420,11 @@ class Db
 
                     $newColumns = array_diff($masterColumns, $slaveColumns);
                     if (count($newColumns) > 0) {
-                        $this->addColumns($schema, $table, $newColumns, $master, $diff, $summary);
+                        $this->addColumns($table, $newColumns, $master, $diff, $summary);
                     }
 
                     $deletedColumns = array_diff($slaveColumns, $masterColumns);
-                    $this->deleteColumns($schema, $table, $deletedColumns, $master, $diff, $summary);
+                    $this->deleteColumns($table, $deletedColumns, $master, $diff, $summary);
 
                     foreach ($masterColumns as $column) {
                         // check modifications (different between $master and $slave)
@@ -433,7 +437,7 @@ class Db
                             $slavePrecission  = $slave['tables'][$table]['columns'][$column]['precision'];
 
                             if ($masterType != $slaveType || $masterPrecission != $slavePrecission) {
-                                $this->alterColumn($schema, $table, $column, $master, $diff, $summary);
+                                $this->alterColumn($table, $column, $master, $diff, $summary);
                             }
                         }
                     }
@@ -445,14 +449,14 @@ class Db
                     $deletedConstraints = array_diff($slaveConstraints, $masterConstraints);
                     if (count($deletedConstraints) > 0) {
                         foreach ($deletedConstraints as $deletedConstraint) {
-                            $this->_dropConstraint($schema, $table, $deletedConstraint, $diff, $summary);
+                            $this->dropConstraint($table, $deletedConstraint, $diff, $summary);
                         }
                     }
                     // then add the new constraints
                     $newConstraints = array_diff($masterConstraints, $slaveConstraints);
                     if (count($newConstraints) > 0) {
                         foreach ($newConstraints as $newConstraint) {
-                            $this->_addConstraint($schema, $table, $newConstraint, $master, $diff, $summary);
+                            $this->addConstraint($table, $newConstraint, $master, $diff, $summary);
                         }
                     }
 
@@ -468,7 +472,7 @@ class Db
         return $out;
     }
 
-    private function _addConstraint($schema, $table, $constraint, $master, &$diff, &$summary)
+    private function addConstraint($table, $constraint, $master, &$diff, &$summary)
     {
         $constraintData = $master['tables'][$table]['constraints'][$constraint];
         $type           = strtoupper($constraintData['type']);
@@ -485,46 +489,46 @@ class Db
         switch ($type) {
             case 'UNIQUE':
                 if (!empty($columns)) {
-                    $diff[] = "ALTER TABLE {$schema}.{$table} ADD CONSTRAINT {$constraint} {$type} (" . implode(', ', $columns) . ");";
+                    $diff[] = "ALTER TABLE {$this->schema}.{$table} ADD CONSTRAINT {$constraint} {$type} (" . implode(', ', $columns) . ");";
                 } else {
-                    $summary[] = 'CONSTRAINT ' . $constraint . ' FOR TABLE ' . $schema . '.' . $table . ' COULD NOT BE ADDED BECAUSE NO COLUMNS WERE DETECTED';
+                    $summary[] = 'CONSTRAINT ' . $constraint . ' FOR TABLE ' . $this->schema . '.' . $table . ' COULD NOT BE ADDED BECAUSE NO COLUMNS WERE DETECTED';
                 }
                 break;
             case 'CHECK':
                 if (!empty($columns)) {
-                    $diff[] = "ALTER TABLE {$schema}.{$table} ADD CONSTRAINT {$constraint} {$type} CHECK {$constraintSrc}";
+                    $diff[] = "ALTER TABLE {$this->schema}.{$table} ADD CONSTRAINT {$constraint} {$type} CHECK {$constraintSrc}";
                 } else {
-                    $summary[] = 'CONSTRAINT ' . $constraint . ' FOR TABLE ' . $schema . '.' . $table . ' COULD NOT BE ADDED BECAUSE NO COLUMNS WERE DETECTED';
+                    $summary[] = 'CONSTRAINT ' . $constraint . ' FOR TABLE ' . $this->schema . '.' . $table . ' COULD NOT BE ADDED BECAUSE NO COLUMNS WERE DETECTED';
                 }
                 break;
             case 'PRIMARY KEY':
                 if (!empty($columns)) {
-                    $diff[] = "ALTER TABLE {$schema}.{$table} ADD CONSTRAINT {$constraint} {$type} (" . implode(', ', $columns) . ");";
+                    $diff[] = "ALTER TABLE {$this->schema}.{$table} ADD CONSTRAINT {$constraint} {$type} (" . implode(', ', $columns) . ");";
                 } else {
-                    $summary[] = 'CONSTRAINT ' . $constraint . ' FOR TABLE ' . $schema . '.' . $table . ' COULD NOT BE ADDED BECAUSE NO COLUMNS WERE DETECTED';
+                    $summary[] = 'CONSTRAINT ' . $constraint . ' FOR TABLE ' . $this->schema . '.' . $table . ' COULD NOT BE ADDED BECAUSE NO COLUMNS WERE DETECTED';
                 }
                 break;
             case 'FOREIGN KEY':
-                $fkSchema  = $schema;
+                $fkSchema  = $this->schema;
                 $fkTable   = $constraintData['reftable'];
                 $fkColumns = $constraintData['refcolumns'];
                 if (!empty($columns) && !empty($fkTable) && !empty($fkColumns)) {
                     $deleteAction = strtoupper(Constraint::$ON_ACTION_MAP[$constraintData['delete_option']]);
                     $updateAction = strtoupper(Constraint::$ON_ACTION_MAP[$constraintData['update_option']]);
                     $match        = strtoupper(Constraint::$MATCH_MAP[$constraintData['match_option']]);
-                    $diff[]       = "ALTER TABLE {$schema}.{$table}
+                    $diff[]       = "ALTER TABLE {$this->schema}.{$table}
                     ADD CONSTRAINT {$constraint} {$type} (" . implode(', ', $columns) . ")
                     REFERENCES {$fkSchema}.{$fkTable} (" . implode(', ', $fkColumns) . ")  MATCH {$match}
                     ON UPDATE {$updateAction} ON DELETE {$deleteAction};";
                 } else {
-                    $summary[] = 'CONSTRAINT ' . $constraint . ' FOR TABLE ' . $schema . '.' . $table . ' COULD NOT BE ADDED BECAUSE NO COLUMNS WERE DETECTED';
+                    $summary[] = 'CONSTRAINT ' . $constraint . ' FOR TABLE ' . $this->schema . '.' . $table . ' COULD NOT BE ADDED BECAUSE NO COLUMNS WERE DETECTED';
                 }
                 break;
         }
     }
 
-    private function _dropConstraint($schema, $table, $constraint, &$diff, &$summary)
+    private function dropConstraint($table, $constraint, &$diff, &$summary)
     {
-        $diff[] = "ALTER TABLE {$schema}.{$table} DROP CONSTRAINT {$constraint} CASCADE;";
+        $diff[] = "ALTER TABLE {$this->schema}.{$table} DROP CONSTRAINT {$constraint} CASCADE;";
     }
 }

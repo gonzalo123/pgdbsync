@@ -64,10 +64,10 @@ class DbConn
     }
 
     const SQL_GET_VIEWS = "
-		SELECT *
-		FROM pg_views
-		WHERE
-			schemaname = :SCHEMA
+        SELECT *
+        FROM pg_views
+        WHERE
+            schemaname = :SCHEMA
     ";
 
     function getViews()
@@ -85,15 +85,15 @@ class DbConn
     }
 
     const SQL_GET_SEQUENCES = "
-		SELECT C.relname, R.rolname \"owner\", relacl
-		FROM pg_class C, pg_catalog.pg_roles R
- 		WHERE C.relkind = 'S'  
-   			AND C.relowner = R.oid
-   			AND C.relnamespace IN (
-        		SELECT oid
-          		FROM pg_namespace
-         		WHERE nspname = :SCHEMA
-			);
+        SELECT C.relname, R.rolname \"owner\", relacl
+        FROM pg_class C, pg_catalog.pg_roles R
+         WHERE C.relkind = 'S'  
+               AND C.relowner = R.oid
+               AND C.relnamespace IN (
+                SELECT oid
+                  FROM pg_namespace
+                 WHERE nspname = :SCHEMA
+            );
     ";
 
     function getSequences()
@@ -111,27 +111,27 @@ class DbConn
     }
 
     const SQL_GET_FUNCTIONS = "
-		SELECT
-		    A.OID, B.NSPNAME, A.PRONAME, T.LANNAME,
-		    (SELECT T.TYPNAME FROM PG_TYPE T WHERE T.OID=A.PRORETTYPE) AS TIPORETORNO,
-		    pronargs,
-		    pronargdefaults,
-		    proargtypes,
-		    proargmodes,
-		    proargnames,
-		    proargdefaults,
-		    proallargtypes
-		FROM
-		    PG_PROC A,
-		    PG_NAMESPACE B,
-		    PG_LANGUAGE T
-		WHERE
-		    A.PRONAMESPACE=B.OID AND
-		    A.PROLANG=T.OID AND
-		    B.NSPNAME = :SCHEMA
-		ORDER BY
-		    B.NSPNAME, A.PRONAME
-	";
+        SELECT
+            A.OID, B.NSPNAME, A.PRONAME, T.LANNAME,
+            (SELECT T.TYPNAME FROM PG_TYPE T WHERE T.OID=A.PRORETTYPE) AS TIPORETORNO,
+            pronargs,
+            pronargdefaults,
+            proargtypes,
+            proargmodes,
+            proargnames,
+            proargdefaults,
+            proallargtypes
+        FROM
+            PG_PROC A,
+            PG_NAMESPACE B,
+            PG_LANGUAGE T
+        WHERE
+            A.PRONAMESPACE=B.OID AND
+            A.PROLANG=T.OID AND
+            B.NSPNAME = :SCHEMA
+        ORDER BY
+            B.NSPNAME, A.PRONAME
+    ";
 
     function exec($sql)
     {
