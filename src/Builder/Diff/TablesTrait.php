@@ -4,12 +4,6 @@ namespace Pgdbsync\Builder\Diff;
 
 trait TablesTrait
 {
-    protected $schema;
-    protected $diff;
-    protected $summary;
-    protected $master;
-    protected $slave;
-
     protected function diffTables()
     {
         $masterTables = isset($this->master['tables']) ? array_keys((array)$this->master['tables']) : [];

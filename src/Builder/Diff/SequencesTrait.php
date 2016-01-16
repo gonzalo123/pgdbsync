@@ -4,12 +4,6 @@ namespace Pgdbsync\Builder\Diff;
 
 trait SequencesTrait
 {
-    protected $schema;
-    protected $diff;
-    protected $summary;
-    protected $master;
-    protected $slave;
-
     protected function diffSequences()
     {
         $masterSequences = isset($this->master['sequences']) ? array_keys((array)$this->master['sequences']) : [];

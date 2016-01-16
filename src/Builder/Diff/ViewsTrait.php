@@ -4,12 +4,6 @@ namespace Pgdbsync\Builder\Diff;
 
 trait ViewsTrait
 {
-    protected $schema;
-    protected $diff;
-    protected $summary;
-    protected $master;
-    protected $slave;
-
     protected function diffViews()
     {
         $masterViews = isset($this->master['views']) ? array_keys((array)$this->master['views']) : [];
