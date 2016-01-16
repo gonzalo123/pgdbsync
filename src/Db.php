@@ -56,7 +56,7 @@ class Db
         foreach ($data as $row) {
             /** @var DbConn $db */
             $db   = $row['db'];
-            $host = $db->dbHost() . " :: " . $db->dbName();
+            $host = $db->getDbHost() . " :: " . $db->getDbname();
             foreach ($row['diff'] as $item) {
                 try {
                     $db->exec($item);

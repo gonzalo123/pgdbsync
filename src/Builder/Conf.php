@@ -19,7 +19,7 @@ class Conf
     public function build($schema)
     {
         $this->conf     = [];
-        $this->schemaDb = $this->db->schema($schema);
+        $this->schemaDb = $this->db->setSchema($schema);
         $this->buildFunctions();
         $this->buildSecuences();
         $this->buildTables();

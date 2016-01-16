@@ -15,21 +15,18 @@ class DbConn
 
     public function connect()
     {
-        $dsn = $this->getDsn();
-
-        $this->pdo = new \PDO($dsn, $this->conf['USER'], isset($this->conf['PASSWORD']) ? $this->conf['PASSWORD'] : null);
+        $this->pdo = new \PDO($this->getDsn(), $this->conf['USER'], isset($this->conf['PASSWORD']) ? $this->conf['PASSWORD'] : null);
         $this->pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-        $this->dsn = $dsn;
 
         return $this;
     }
 
-    public function dbName()
+    public function getDbname()
     {
         return isset($this->conf['DBNAME']) ? $this->conf['DBNAME'] : null;
     }
 
-    public function dbHost()
+    public function getDbHost()
     {
         return isset($this->conf['HOST']) ? $this->conf['HOST'] : null;
     }
@@ -56,7 +53,7 @@ class DbConn
 
     private $_schema = null;
 
-    public function schema($schema)
+    public function setSchema($schema)
     {
         $this->_schema = $schema;
 
@@ -162,7 +159,7 @@ class DbConn
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute(['SCHEMA' => strtolower($this->_schema)]);
         while ($row = $stmt->fetch()) {
-            $out[] = new Table($this->pdo, $row['schemaname'], $row['tablename'], $row['tableowner'], $row['tablespace'], $row['hasindexes'], $this->dsn, $row['oid']);
+            $out[] = new Table($this->pdo, $row['schemaname'], $row['tablename'], $row['tableowner'], $row['tablespace'], $row['hasindexes'], $row['oid']);
         }
         $stmt = null;
 
