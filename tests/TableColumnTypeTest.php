@@ -19,7 +19,7 @@ class TableColumnTypeTest extends \PHPUnit_Framework_TestCase
     public function test_table_column_with_different_type()
     {
         $dbVc = new Db();
-        $dbVc->setMasrer(new DbConn($this->conf['devel']));
+        $dbVc->setMaster(new DbConn($this->conf['devel']));
         $dbVc->setSlave(new DbConn($this->conf['devel2']));
 
         $diff = $dbVc->raw('public');

@@ -5,22 +5,104 @@ use Pgdbsync\Builder\Conf;
 
 class Db
 {
+    private $schema;
+
     private $settings = [
         'alter_owner' => false
     ];
 
+    /** @var DbConn null  */
     private $masterDb = null;
+    private $slaveDb = [];
 
-    public function setMasrer(DbConn $db)
+    public function setMaster(DbConn $db)
     {
         $this->masterDb = $db;
     }
 
-    private $slaveDb = [];
-
     public function setSlave(DbConn $db)
     {
         $this->slaveDb[] = $db;
+    }
+
+    public function summary($schema)
+    {
+
+        $this->schema = $schema;
+        $buffer = [];
+        $data   = $this->createDiff();
+        foreach ($data as $row) {
+            if (count($row['summary']) > 0) {
+                $title    = "DBNAME : " . $row['db']->dbName();
+                $buffer[] = $title;
+                $buffer[] = str_repeat("-", strlen($title));
+
+                foreach ($row['summary'] as $type => $info) {
+                    $buffer[] = $type;
+                    foreach ($info as $mode => $objects) {
+                        foreach ($objects as $object) {
+                            $buffer[] = " " . $mode . " :: " . $object;
+                        }
+                    }
+                }
+                $buffer[] = "\n";
+            }
+        }
+
+        return implode("\n", $buffer) . "\n";
+    }
+
+    public function run($schema)
+    {
+        $this->schema = $schema;
+        $errors = [];
+        $data   = $this->createDiff();
+        foreach ($data as $row) {
+            /** @var DbConn $db */
+            $db   = $row['db'];
+            $host = $db->dbHost() . " :: " . $db->dbName();
+            foreach ($row['diff'] as $item) {
+                try {
+                    $db->exec($item);
+                } catch (\PDOException $e) {
+                    $errors[$host][] = [
+                        $item,
+                        $e->getMessage()
+                    ];
+                }
+            }
+        }
+
+        return $errors;
+    }
+
+    public function raw($schema)
+    {
+        $this->schema = $schema;
+        return $this->createDiff();
+    }
+
+    public function diff($schema)
+    {
+        $this->schema = $schema;
+        $buffer = [];
+        $data   = $this->createDiff();
+        foreach ($data as $row) {
+            if (count($row['diff']) > 0) {
+                $title    = "DBNAME : " . $row['db']->dbName();
+                $buffer[] = $title;
+                $buffer[] = str_repeat("-", strlen($title));
+
+                foreach ($row['diff'] as $item) {
+                    $buffer[] = $item;
+                }
+                $buffer[] = "\n";
+            } else {
+                $buffer[] = "Already sync : " . $row['db']->dbName();
+            }
+        }
+
+        return implode("\n", $buffer) . "\n";
     }
 
     private function buildConf(DbConn $db)
@@ -229,244 +311,12 @@ class Db
         $summary['column']['alter'][] = "{$this->schema}.{$table} {$column}";
     }
 
-    public function summary($schema)
-    {
-        $this->schema = $schema;
-        $buffer = [];
-        $data   = $this->createDiff();
-        foreach ($data as $row) {
-            if (count($row['summary']) > 0) {
-                $title    = "DBNAME : " . $row['db']->dbName();
-                $buffer[] = $title;
-                $buffer[] = str_repeat("-", strlen($title));
-
-                foreach ($row['summary'] as $type => $info) {
-                    $buffer[] = $type;
-                    foreach ($info as $mode => $objects) {
-                        foreach ($objects as $object) {
-                            $buffer[] = " " . $mode . " :: " . $object;
-                        }
-                    }
-                }
-                $buffer[] = "\n";
-            }
-        }
-
-        return implode("\n", $buffer) . "\n";
-    }
-
-    public function run($schema)
-    {
-        $this->schema = $schema;
-        $errors = [];
-        $data   = $this->createDiff();
-        foreach ($data as $row) {
-            /** @var DbConn $db */
-            $db   = $row['db'];
-            $host = $db->dbHost() . " :: " . $db->dbName();
-            foreach ($row['diff'] as $item) {
-                try {
-                    $db->exec($item);
-                } catch (\PDOException $e) {
-                    $errors[$host][] = [
-                        $item,
-                        $e->getMessage()
-                    ];
-                }
-            }
-        }
-
-        return $errors;
-    }
-
-    public function raw($schema)
-    {
-        $this->schema = $schema;
-        return $this->createDiff();
-    }
-
-    public function diff($schema)
-    {
-        $this->schema = $schema;
-        $buffer = [];
-        $data   = $this->createDiff();
-        foreach ($data as $row) {
-            if (count($row['diff']) > 0) {
-                $title    = "DBNAME : " . $row['db']->dbName();
-                $buffer[] = $title;
-                $buffer[] = str_repeat("-", strlen($title));
-
-                foreach ($row['diff'] as $item) {
-                    $buffer[] = $item;
-                }
-                $buffer[] = "\n";
-            } else {
-                $buffer[] = "Already sync : " . $row['db']->dbName();
-            }
-        }
-
-        return implode("\n", $buffer) . "\n";
-    }
-
     private function createDiff()
     {
         $out    = [];
         $master = $this->buildConf($this->masterDb->connect(), $this->schema);
         foreach ($this->slaveDb as $slaveDb) {
-            $slave = $this->buildConf($slaveDb->connect(), $this->schema);
-            if (md5(serialize($master)) == md5(serialize($slave))) {
-                // echo "[OK] <b>{$this->schema}</b> " . $slaveDb->dbName() . "<br/>";
-                $out[] = [
-                    'db'      => $slaveDb,
-                    'diff'    => [],
-                    'summary' => []
-                ];
-            } else {
-                $diff = $summary = [];
-
-                // FUNCTIONS
-                $masterFunctions = isset($master['functions']) ? array_keys((array)$master['functions']) : [];
-                $slaveFunctions  = isset($slave['functions']) ? array_keys((array)$slave['functions']) : [];
-                // delete deleted functions
-                $deletedFunctions = array_diff($slaveFunctions, $masterFunctions);
-                if (count($deletedFunctions) > 0) {
-                    $this->deleteFunctions($deletedFunctions, $master, $diff, $summary);
-                }
-                // create new functions
-                $newFunctions = array_diff($masterFunctions, $slaveFunctions);
-
-                // check diferences
-                foreach ($masterFunctions as $functionName) {
-                    if (!in_array($functionName, $newFunctions)) {
-                        $definitionMaster = $master['functions'][$functionName]['definition'];
-                        $definitionSlave  = $slave['functions'][$functionName]['definition'];
-
-                        if (md5($definitionMaster) != md5($definitionSlave)) {
-                            $newFunctions[] = $functionName;
-                        }
-                    }
-                }
-
-                if (count($newFunctions) > 0) {
-                    $this->createFunctions($newFunctions, $master, $diff, $summary);
-                }
-
-                // SEQUENCES
-                $masterSequences = isset($master['sequences']) ? array_keys((array)$master['sequences']) : [];
-                $slaveSequences  = isset($slave['sequences']) ? array_keys((array)$slave['sequences']) : [];
-
-                // delete deleted sequences
-                $deletedSequences = array_diff($slaveSequences, $masterSequences);
-                if (count($deletedSequences) > 0) {
-                    $this->deleteSequences($deletedSequences, $master, $diff, $summary);
-                }
-                // create new sequences
-                $newSequences = array_diff($masterSequences, $slaveSequences);
-                if (count($newSequences) > 0) {
-                    $this->createSequences($newSequences, $master, $diff, $summary);
-                }
-
-                // VIEWS
-                $masterViews = isset($master['views']) ? array_keys((array)$master['views']) : [];
-                $slaveViews  = isset($slave['views']) ? array_keys((array)$slave['views']) : [];
-
-                // delete deleted views
-                $deletedViews = array_diff($slaveViews, $masterViews);
-                if (count($deletedViews) > 0) {
-                    $this->deleteViews($deletedViews, $master, $diff, $summary);
-                }
-
-                // create new views
-                $newViews = array_diff($masterViews, $slaveViews);
-                if (count($newViews) > 0) {
-                    $this->createViews($newViews, $master, $diff, $summary);
-                }
-
-                foreach ($masterViews as $view) {
-                    if (in_array($view, $newViews)) {
-                        continue;
-                    }
-
-                    if ($master['views'][$view]['definition'] !== $slave['views'][$view]['definition']) {
-                        $this->createView($view, $master, $diff, $summary);
-                    }
-                }
-                // TABLES
-
-                $masterTables = isset($master['tables']) ? array_keys((array)$master['tables']) : [];
-                $slaveTables  = isset($slave['tables']) ? array_keys((array)$slave['tables']) : [];
-
-                // delete deleted tables
-                $deletedTables = array_diff($slaveTables, $masterTables);
-                if (count($deletedTables) > 0) {
-                    $this->deleteTables($deletedTables, $master, $diff, $summary);
-                }
-
-                // create new tables
-                $newTables = array_diff($masterTables, $slaveTables);
-                if (count($newTables) > 0) {
-                    $this->createTables($newTables, $master, $diff, $summary);
-                }
-
-                foreach ($masterTables as $table) {
-                    if (in_array($table, $newTables)) {
-                        continue;
-                    }
-
-                    // check new columns in $master and not in $slave
-                    // check deleted columns in $master (exits in $slave and not in master)
-                    $masterColumns = array_keys((array)$master['tables'][$table]['columns']);
-                    $slaveColumns  = array_keys((array)$slave['tables'][$table]['columns']);
-
-                    $newColumns = array_diff($masterColumns, $slaveColumns);
-                    if (count($newColumns) > 0) {
-                        $this->addColumns($table, $newColumns, $master, $diff, $summary);
-                    }
-
-                    $deletedColumns = array_diff($slaveColumns, $masterColumns);
-                    $this->deleteColumns($table, $deletedColumns, $master, $diff, $summary);
-
-                    foreach ($masterColumns as $column) {
-                        // check modifications (different between $master and $slave)
-                        // check differences in type
-                        if (isset($master['tables'][$table]['columns'][$column]) && isset($slave['tables'][$table]['columns'][$column])) {
-                            $masterType = $master['tables'][$table]['columns'][$column]['type'];
-                            $slaveType  = $slave['tables'][$table]['columns'][$column]['type'];
-                            // check differences in precission
-                            $masterPrecission = $master['tables'][$table]['columns'][$column]['precision'];
-                            $slavePrecission  = $slave['tables'][$table]['columns'][$column]['precision'];
-
-                            if ($masterType != $slaveType || $masterPrecission != $slavePrecission) {
-                                $this->alterColumn($table, $column, $master, $diff, $summary);
-                            }
-                        }
-                    }
-
-                    // check new or removed constraints
-                    $masterConstraints = array_keys((array)$master['tables'][$table]['constraints']);
-                    $slaveConstraints  = array_keys((array)$slave['tables'][$table]['constraints']);
-                    // Delete missing constraints first
-                    $deletedConstraints = array_diff($slaveConstraints, $masterConstraints);
-                    if (count($deletedConstraints) > 0) {
-                        foreach ($deletedConstraints as $deletedConstraint) {
-                            $this->dropConstraint($table, $deletedConstraint, $diff, $summary);
-                        }
-                    }
-                    // then add the new constraints
-                    $newConstraints = array_diff($masterConstraints, $slaveConstraints);
-                    if (count($newConstraints) > 0) {
-                        foreach ($newConstraints as $newConstraint) {
-                            $this->addConstraint($table, $newConstraint, $master, $diff, $summary);
-                        }
-                    }
-
-                }
-                $out[] = [
-                    'db'      => $slaveDb,
-                    'diff'    => $diff,
-                    'summary' => $summary
-                ];
-            }
+            $out = $this->createDiffPerDb($slaveDb, $master, $out);
         }
 
         return $out;
@@ -530,5 +380,167 @@ class Db
     private function dropConstraint($table, $constraint, &$diff, &$summary)
     {
         $diff[] = "ALTER TABLE {$this->schema}.{$table} DROP CONSTRAINT {$constraint} CASCADE;";
+    }
+
+    private function createDiffPerDb(DbConn $slaveDb, $master, $out)
+    {
+        $slave = $this->buildConf($slaveDb->connect(), $this->schema);
+        if (md5(serialize($master)) == md5(serialize($slave))) {
+            // echo "[OK] <b>{$this->schema}</b> " . $slaveDb->dbName() . "<br/>";
+            $out[] = [
+                'db'      => $slaveDb,
+                'diff'    => [],
+                'summary' => []
+            ];
+
+            return $out;
+        } else {
+            $diff = $summary = [];
+
+            // FUNCTIONS
+            $masterFunctions = isset($master['functions']) ? array_keys((array)$master['functions']) : [];
+            $slaveFunctions  = isset($slave['functions']) ? array_keys((array)$slave['functions']) : [];
+            // delete deleted functions
+            $deletedFunctions = array_diff($slaveFunctions, $masterFunctions);
+            if (count($deletedFunctions) > 0) {
+                $this->deleteFunctions($deletedFunctions, $master, $diff, $summary);
+            }
+            // create new functions
+            $newFunctions = array_diff($masterFunctions, $slaveFunctions);
+
+            // check diferences
+            foreach ($masterFunctions as $functionName) {
+                if (!in_array($functionName, $newFunctions)) {
+                    $definitionMaster = $master['functions'][$functionName]['definition'];
+                    $definitionSlave  = $slave['functions'][$functionName]['definition'];
+
+                    if (md5($definitionMaster) != md5($definitionSlave)) {
+                        $newFunctions[] = $functionName;
+                    }
+                }
+            }
+
+            if (count($newFunctions) > 0) {
+                $this->createFunctions($newFunctions, $master, $diff, $summary);
+            }
+
+            // SEQUENCES
+            $masterSequences = isset($master['sequences']) ? array_keys((array)$master['sequences']) : [];
+            $slaveSequences  = isset($slave['sequences']) ? array_keys((array)$slave['sequences']) : [];
+
+            // delete deleted sequences
+            $deletedSequences = array_diff($slaveSequences, $masterSequences);
+            if (count($deletedSequences) > 0) {
+                $this->deleteSequences($deletedSequences, $master, $diff, $summary);
+            }
+            // create new sequences
+            $newSequences = array_diff($masterSequences, $slaveSequences);
+            if (count($newSequences) > 0) {
+                $this->createSequences($newSequences, $master, $diff, $summary);
+            }
+
+            // VIEWS
+            $masterViews = isset($master['views']) ? array_keys((array)$master['views']) : [];
+            $slaveViews  = isset($slave['views']) ? array_keys((array)$slave['views']) : [];
+
+            // delete deleted views
+            $deletedViews = array_diff($slaveViews, $masterViews);
+            if (count($deletedViews) > 0) {
+                $this->deleteViews($deletedViews, $master, $diff, $summary);
+            }
+
+            // create new views
+            $newViews = array_diff($masterViews, $slaveViews);
+            if (count($newViews) > 0) {
+                $this->createViews($newViews, $master, $diff, $summary);
+            }
+
+            foreach ($masterViews as $view) {
+                if (in_array($view, $newViews)) {
+                    continue;
+                }
+
+                if ($master['views'][$view]['definition'] !== $slave['views'][$view]['definition']) {
+                    $this->createView($view, $master, $diff, $summary);
+                }
+            }
+            // TABLES
+
+            $masterTables = isset($master['tables']) ? array_keys((array)$master['tables']) : [];
+            $slaveTables  = isset($slave['tables']) ? array_keys((array)$slave['tables']) : [];
+
+            // delete deleted tables
+            $deletedTables = array_diff($slaveTables, $masterTables);
+            if (count($deletedTables) > 0) {
+                $this->deleteTables($deletedTables, $master, $diff, $summary);
+            }
+
+            // create new tables
+            $newTables = array_diff($masterTables, $slaveTables);
+            if (count($newTables) > 0) {
+                $this->createTables($newTables, $master, $diff, $summary);
+            }
+
+            foreach ($masterTables as $table) {
+                if (in_array($table, $newTables)) {
+                    continue;
+                }
+
+                // check new columns in $master and not in $slave
+                // check deleted columns in $master (exits in $slave and not in master)
+                $masterColumns = array_keys((array)$master['tables'][$table]['columns']);
+                $slaveColumns  = array_keys((array)$slave['tables'][$table]['columns']);
+
+                $newColumns = array_diff($masterColumns, $slaveColumns);
+                if (count($newColumns) > 0) {
+                    $this->addColumns($table, $newColumns, $master, $diff, $summary);
+                }
+
+                $deletedColumns = array_diff($slaveColumns, $masterColumns);
+                $this->deleteColumns($table, $deletedColumns, $master, $diff, $summary);
+
+                foreach ($masterColumns as $column) {
+                    // check modifications (different between $master and $slave)
+                    // check differences in type
+                    if (isset($master['tables'][$table]['columns'][$column]) && isset($slave['tables'][$table]['columns'][$column])) {
+                        $masterType = $master['tables'][$table]['columns'][$column]['type'];
+                        $slaveType  = $slave['tables'][$table]['columns'][$column]['type'];
+                        // check differences in precission
+                        $masterPrecission = $master['tables'][$table]['columns'][$column]['precision'];
+                        $slavePrecission  = $slave['tables'][$table]['columns'][$column]['precision'];
+
+                        if ($masterType != $slaveType || $masterPrecission != $slavePrecission) {
+                            $this->alterColumn($table, $column, $master, $diff, $summary);
+                        }
+                    }
+                }
+
+                // check new or removed constraints
+                $masterConstraints = array_keys((array)$master['tables'][$table]['constraints']);
+                $slaveConstraints  = array_keys((array)$slave['tables'][$table]['constraints']);
+                // Delete missing constraints first
+                $deletedConstraints = array_diff($slaveConstraints, $masterConstraints);
+                if (count($deletedConstraints) > 0) {
+                    foreach ($deletedConstraints as $deletedConstraint) {
+                        $this->dropConstraint($table, $deletedConstraint, $diff, $summary);
+                    }
+                }
+                // then add the new constraints
+                $newConstraints = array_diff($masterConstraints, $slaveConstraints);
+                if (count($newConstraints) > 0) {
+                    foreach ($newConstraints as $newConstraint) {
+                        $this->addConstraint($table, $newConstraint, $master, $diff, $summary);
+                    }
+                }
+
+            }
+            $out[] = [
+                'db'      => $slaveDb,
+                'diff'    => $diff,
+                'summary' => $summary
+            ];
+
+            return $out;
+        }
     }
 }

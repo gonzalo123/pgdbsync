@@ -21,7 +21,7 @@ class NewTableTest extends \PHPUnit_Framework_TestCase
     public function test_new_table()
     {
         $dbVc = new Db();
-        $dbVc->setMasrer(new DbConn($this->conf['devel']));
+        $dbVc->setMaster(new DbConn($this->conf['devel']));
         $dbVc->setSlave(new DbConn($this->conf['devel2']));
 
         $user = $this->conf['devel2']['USER'];

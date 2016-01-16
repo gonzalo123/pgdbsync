@@ -61,7 +61,7 @@ try {
     }
 
     $dbVc = new Db();
-    $dbVc->setMasrer(new DbConn($master));
+    $dbVc->setMaster(new DbConn($master));
     if ($to == 'all') {
         foreach ($conf as $key => $slave) {
             if ($key != $from) {
