@@ -31,7 +31,7 @@ CREATE SEQUENCE public.mysecuence
   INCREMENT 1
   MINVALUE 1
   MAXVALUE 9223372036854775807
-  START 1;";
+  START 342;";
 
         $this->assertEquals($expected, $diff[0]['diff'][0]);
     }

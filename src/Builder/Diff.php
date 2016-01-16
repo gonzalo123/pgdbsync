@@ -22,11 +22,11 @@ class Diff
 
     public function getDiff($master, $slave)
     {
-        $this->master = $master;
-        $this->slave = $slave;
+        $this->master  = $master;
+        $this->slave   = $slave;
         $this->diff    = [];
         $this->summary = [];
-        
+
         $this->diffFunctions();
         $this->diffSequences();
         $this->diffViews();
@@ -143,7 +143,7 @@ class Diff
     {
         if (count((array)$functions) > 0) {
             foreach ($functions as $function) {
-                $buffer                          = $this->master['functions'][$function]['definition'];
+                $buffer                                = $this->master['functions'][$function]['definition'];
                 $this->summary['function']['create'][] = "{$this->schema}.{$function}";
                 $this->diff[]                          = $buffer;
             }
@@ -171,7 +171,7 @@ class Diff
         $buffer .= "\n  INCREMENT {$increment}";
         $buffer .= "\n  MINVALUE {$minvalue}";
         $buffer .= "\n  MAXVALUE {$maxvalue}";
-        $buffer .= "\n  START 1;";
+        $buffer .= "\n  START {$start};";
         if ($this->settings['alter_owner'] === true) {
             $buffer .= "\nALTER TABLE {$this->schema}.{$sequence} OWNER TO {$owner};";
         }
@@ -233,8 +233,8 @@ class Diff
 
     private function alterColumn($table, $column)
     {
-        $masterType                   = $this->master['tables'][$table]['columns'][$column]['type'];
-        $masterPrecision              = $this->master['tables'][$table]['columns'][$column]['precision'];
+        $masterType                         = $this->master['tables'][$table]['columns'][$column]['type'];
+        $masterPrecision                    = $this->master['tables'][$table]['columns'][$column]['precision'];
         $this->diff[]                       = "ALTER TABLE {$this->schema}.{$table} ALTER {$column} TYPE {$masterType}" . (empty($masterPrecision) ? "" : ("(" . $masterPrecision . ")")) . ";";
         $this->summary['column']['alter'][] = "{$this->schema}.{$table} {$column}";
     }
@@ -283,7 +283,7 @@ class Diff
                     $deleteAction = strtoupper(Constraint::$ON_ACTION_MAP[$constraintData['delete_option']]);
                     $updateAction = strtoupper(Constraint::$ON_ACTION_MAP[$constraintData['update_option']]);
                     $match        = strtoupper(Constraint::$MATCH_MAP[$constraintData['match_option']]);
-                    $this->diff[]       = "ALTER TABLE {$this->schema}.{$table}
+                    $this->diff[] = "ALTER TABLE {$this->schema}.{$table}
                     ADD CONSTRAINT {$constraint} {$type} (" . implode(', ', $columns) . ")
                     REFERENCES {$fkSchema}.{$fkTable} (" . implode(', ', $fkColumns) . ")  MATCH {$match}
                     ON UPDATE {$updateAction} ON DELETE {$deleteAction};";
