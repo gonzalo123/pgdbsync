@@ -45,10 +45,12 @@ GRANT ALL ON TABLE public.testtable TO {$user};
     {
         $this->database = new Database($this->conf);
         $this->database->executeInDatabase('devel', function (PDO $conn) {
+            $user = $this->conf['devel2']['USER'];
             $conn->exec("CREATE TABLE testTable (
                 userid VARCHAR PRIMARY KEY NOT NULL,
                 id numeric
             );");
+            $conn->exec("GRANT ALL ON TABLE public.testtable TO {$user}");
         });
     }
 
