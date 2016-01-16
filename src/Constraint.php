@@ -3,28 +3,27 @@ namespace Pgdbsync;
 
 class Constraint
 {
-
     private $_pdo = null;
 
     private $_meta = null;
 
-    public static $ON_ACTION_MAP = array(
+    public static $ON_ACTION_MAP = [
         'a' => 'no action',
         'r' => 'restrict',
         'c' => 'cascade',
         'n' => 'set null',
         'd' => 'set default'
-    );
-    
-    public static $MATCH_MAP = array(
+    ];
+
+    public static $MATCH_MAP = [
         'f' => 'full',
         'p' => 'partial',
         'u' => 'simple'
-    );
+    ];
 
     function __construct(\PDO $pdo, $meta)
     {
-        $this->_pdo = $pdo;
+        $this->_pdo  = $pdo;
         $this->_meta = $meta;
     }
 
@@ -52,7 +51,7 @@ class Constraint
     {
         return $this->_meta['confupdtype'];
     }
-    
+
     public function getMatchOption()
     {
         return $this->_meta['confmatchtype'];
@@ -60,13 +59,14 @@ class Constraint
 
     public function getColumns()
     {
-        $columns = array();
-        $conkey = $this->_meta['conkey'];
+        $columns = [];
+        $conkey  = $this->_meta['conkey'];
         if (strlen($conkey) > 0) {
-            $conkey = str_replace("{", null, $conkey);
-            $conkey = str_replace("}", null, $conkey);
+            $conkey  = str_replace("{", null, $conkey);
+            $conkey  = str_replace("}", null, $conkey);
             $columns = explode(",", $conkey);
         }
+
         return $columns;
     }
 
