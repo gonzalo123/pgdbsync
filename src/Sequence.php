@@ -17,7 +17,7 @@ class Sequence
         $this->_name   = $meta['relname'];
         $this->_acl    = $meta['relacl'];
         $this->_owner  = $meta['owner'];
-        $this->_meta   = $this->getSequenceInfo($schema, $this->_name);
+        $this->_meta   = $this->getSequenceInfo($this->_name);
     }
 
     public function grants()
@@ -36,7 +36,7 @@ class Sequence
         return $out;
     }
 
-    private function getSequenceInfo($schema, $name)
+    private function getSequenceInfo($name)
     {
         $stmt = $this->_pdo->prepare("SELECT * FROM {$this->_schema}.{$name}");
         $stmt->execute();
@@ -67,8 +67,6 @@ class Sequence
 
     public function getMaxValue()
     {
-        $a = $this->_meta;
-
         return $this->_meta['max_value'];
     }
 
