@@ -24,7 +24,6 @@ class Db
 
     public function summary($schema)
     {
-
         $this->schema = $schema;
         $buffer = [];
         $data   = $this->createDiff();
