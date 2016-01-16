@@ -7,7 +7,7 @@ class View
     private $_meta   = null;
     private $_schema = null;
 
-    function __construct(\PDO &$pdo, $meta, $schema)
+    function __construct(\PDO $pdo, $meta, $schema)
     {
         $this->_pdo    = $pdo;
         $this->_meta   = $meta;

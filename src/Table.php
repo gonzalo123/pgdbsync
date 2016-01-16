@@ -10,7 +10,7 @@ class Table
     private $_tablespace = null;
     private $_oid        = null;
 
-    function __construct(\PDO &$pdo, $schema, $tablename, $owner, $tablespace, $hasindexes, $oid)
+    function __construct(\PDO $pdo, $schema, $tablename, $owner, $tablespace, $hasindexes, $oid)
     {
         $this->_pdo        = $pdo;
         $this->_schema     = $schema;
