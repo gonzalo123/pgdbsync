@@ -48,8 +48,11 @@ class Column
             case 'bigint':
                 return null;
             case 'numeric':
-                return $this->_meta['numeric_precision'] . ', ' . $this->_meta['numeric_scale'];
-
+                if ($this->_meta['numeric_precision']) {
+                    return $this->_meta['numeric_precision'] . ', ' . $this->_meta['numeric_scale'];
+                } else {
+                    return null;
+                }
             default:
                 return null;
         }
