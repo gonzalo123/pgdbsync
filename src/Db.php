@@ -109,19 +109,18 @@ class Db
     private function createDiff()
     {
         $out    = [];
-        $master = $this->buildConf($this->masterDb->connect(), $this->schema);
+        $master = $this->buildConf($this->masterDb->connect());
         foreach ($this->slaveDb as $slaveDb) {
-            $out[] = $this->createDiffPerDb($slaveDb, $master, $out);
+            $out[] = $this->createDiffPerDb($slaveDb, $master);
         }
 
         return $out;
     }
 
-    private function createDiffPerDb(DbConn $slaveDb, $master, $out)
+    private function createDiffPerDb(DbConn $slaveDb, $master)
     {
-        $slave = $this->buildConf($slaveDb->connect(), $this->schema);
+        $slave = $this->buildConf($slaveDb->connect());
         if (md5(serialize($master)) == md5(serialize($slave))) {
-            // echo "[OK] <b>{$this->schema}</b> " . $slaveDb->dbName() . "<br/>";
             $out = [
                 'db'      => $slaveDb,
                 'diff'    => [],
