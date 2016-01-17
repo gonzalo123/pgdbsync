@@ -8,9 +8,19 @@ class Db
 {
     private $schema;
 
-    /** @var DbConn null  */
+    /** @var DbConn null */
     private $masterDb = null;
-    private $slaveDb = [];
+    private $slaveDb  = [];
+    private $settings;
+
+    private $defaultSettings = [
+        'alter_owner' => false
+    ];
+
+    public function __construct($settings = null)
+    {
+        $this->settings = is_null($settings) ? $this->defaultSettings : $settings;
+    }
 
     public function setMaster(DbConn $db)
     {
@@ -25,8 +35,8 @@ class Db
     public function summary($schema)
     {
         $this->schema = $schema;
-        $buffer = [];
-        $data   = $this->createDiff();
+        $buffer       = [];
+        $data         = $this->createDiff();
         foreach ($data as $row) {
             if (count($row['summary']) > 0) {
                 $title    = "DBNAME : " . $row['db']->dbName();
@@ -51,8 +61,8 @@ class Db
     public function run($schema)
     {
         $this->schema = $schema;
-        $errors = [];
-        $data   = $this->createDiff();
+        $errors       = [];
+        $data         = $this->createDiff();
         foreach ($data as $row) {
             /** @var DbConn $db */
             $db   = $row['db'];
@@ -75,14 +85,15 @@ class Db
     public function raw($schema)
     {
         $this->schema = $schema;
+
         return $this->createDiff();
     }
 
     public function diff($schema)
     {
         $this->schema = $schema;
-        $buffer = [];
-        $data   = $this->createDiff();
+        $buffer       = [];
+        $data         = $this->createDiff();
         foreach ($data as $row) {
             if (count($row['diff']) > 0) {
                 $title    = "DBNAME : " . $row['db']->dbName();
@@ -127,9 +138,9 @@ class Db
                 'summary' => []
             ];
         } else {
-            $diff = new Diff($this->schema);
-            $diffResult = $diff->getDiff($master, $slave);
-            $diffResult['db']      = $slaveDb;
+            $diff             = new Diff($this->settings, $this->schema);
+            $diffResult       = $diff->getDiff($master, $slave);
+            $diffResult['db'] = $slaveDb;
 
             $out = $diffResult;
         }

@@ -5,8 +5,8 @@ namespace Pgdbsync\Builder;
 use Pgdbsync\Builder\Diff\Functions;
 use Pgdbsync\Builder\Diff\FunctionsTrait;
 use Pgdbsync\Builder\Diff\SequencesTrait;
-use Pgdbsync\Builder\Diff\ViewsTrait;
 use Pgdbsync\Builder\Diff\TablesTrait;
+use Pgdbsync\Builder\Diff\ViewsTrait;
 
 class Diff
 {
@@ -15,19 +15,16 @@ class Diff
     use ViewsTrait;
     use TablesTrait;
 
-    // @todo extract this configuration out
-    protected $settings = [
-        'alter_owner' => false
-    ];
-
     protected $schema;
     protected $diff;
     protected $summary;
     protected $master;
     protected $slave;
+    protected $conf;
 
-    public function __construct($schema)
+    public function __construct($settings, $schema)
     {
+        $this->settings   = $settings;
         $this->schema = $schema;
     }
 

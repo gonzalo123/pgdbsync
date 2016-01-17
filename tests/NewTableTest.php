@@ -24,7 +24,6 @@ class NewTableTest extends \PHPUnit_Framework_TestCase
         $dbVc->setMaster(new DbConn($this->conf['devel']));
         $dbVc->setSlave(new DbConn($this->conf['devel2']));
 
-        $user = $this->conf['devel2']['USER'];
         $diff = $dbVc->raw('public');
 
         $this->assertCount(1, $diff);
@@ -32,14 +31,13 @@ class NewTableTest extends \PHPUnit_Framework_TestCase
 
 
         $expected = "
-CREATE TABLE public.testtable(
- \"userid\" character varying NOT NULL,
- \"password\" character varying NOT NULL,
- \"name\" character varying,
- \"surname\" character varying,
- CONSTRAINT testtable_pkey PRIMARY KEY (\"userid\")
-);
-GRANT ALL ON TABLE public.testtable TO {$user};";
+            CREATE TABLE public.testtable(
+             \"userid\" character varying NOT NULL,
+             \"password\" character varying NOT NULL,
+             \"name\" character varying,
+             \"surname\" character varying,
+             CONSTRAINT testtable_pkey PRIMARY KEY (\"userid\")
+        );";
 
         $this->assertEquals(StringParser::trimLines($expected), StringParser::trimLines($diff[0]['diff'][0]));
     }

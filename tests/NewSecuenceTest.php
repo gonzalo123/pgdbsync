@@ -1,6 +1,7 @@
 <?php
 
 include_once __DIR__ . '/fixtures/Database.php';
+include_once __DIR__ . '/fixtures/StringParser.php';
 
 use Pgdbsync\DbConn;
 use Pgdbsync\Db;
@@ -27,13 +28,12 @@ class NewSecuenceTest extends \PHPUnit_Framework_TestCase
         $this->assertCount(1, $diff[0]['diff']);
 
         $expected = "
-CREATE SEQUENCE public.mysecuence
-  INCREMENT 1
-  MINVALUE 1
-  MAXVALUE 9223372036854775807
-  START 342;";
-
-        $this->assertEquals($expected, $diff[0]['diff'][0]);
+            CREATE SEQUENCE public.mysecuence
+              INCREMENT 1
+              MINVALUE 1
+              MAXVALUE 9223372036854775807
+              START 342;";
+        $this->assertEquals(StringParser::trimLines($expected), StringParser::trimLines($diff[0]['diff'][0]));
     }
 
     public function setUp()

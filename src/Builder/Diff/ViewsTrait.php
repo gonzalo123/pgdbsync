@@ -52,7 +52,7 @@ trait ViewsTrait
             $buffer .= "\nALTER TABLE {$this->schema}.{$view} OWNER TO {$owner};";
         }
         foreach ($this->master['views'][$view]['grants'] as $grant) {
-            if (!empty($grant)) {
+            if (!empty($grant) && $this->settings['alter_owner'] === true) {
                 $buffer .= "\nGRANT ALL ON TABLE {$this->schema}.{$view} TO {$grant};";
             }
         }

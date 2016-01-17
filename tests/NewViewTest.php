@@ -22,21 +22,19 @@ class NewViewTest extends \PHPUnit_Framework_TestCase
         $dbVc->setMaster(new DbConn($this->conf['devel']));
         $dbVc->setSlave(new DbConn($this->conf['devel2']));
 
-        $user = $this->conf['devel2']['USER'];
         $diff = $dbVc->raw('public');
 
         $this->assertCount(1, $diff);
         $this->assertCount(2, $diff[0]['diff']);
 
         $expected = "
-CREATE OR REPLACE VIEW public.myview AS
-   SELECT testtable.userid,
-    testtable.password,
-    testtable.name,
-    testtable.surname
-   FROM testtable
-  WHERE ((testtable.surname)::text = 'x'::text);
-GRANT ALL ON TABLE public.myview TO {$user};";
+            CREATE OR REPLACE VIEW public.myview AS
+               SELECT testtable.userid,
+                testtable.password,
+                testtable.name,
+                testtable.surname
+               FROM testtable
+              WHERE ((testtable.surname)::text = 'x'::text);";
 
         $this->assertEquals(StringParser::trimLines($expected), StringParser::trimLines($diff[0]['diff'][0]));
     }
@@ -52,7 +50,6 @@ GRANT ALL ON TABLE public.myview TO {$user};";
                 name VARCHAR,
                 surname VARCHAR
             );");
-            $conn->exec("GRANT ALL ON TABLE public.testtable TO {$user}");
             $conn->exec("CREATE VIEW myView AS
                 SELECT *
                 FROM testTable

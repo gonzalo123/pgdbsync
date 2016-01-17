@@ -28,12 +28,12 @@ class FunctionTest extends \PHPUnit_Framework_TestCase
         $this->assertCount(1, $diff[0]['diff']);
 
         $expected = "
-CREATE OR REPLACE FUNCTION public.hello(name character varying) RETURNS character varying
-LANGUAGE plpgsql AS \$function\$
-BEGIN
-    RETURN 'Hello ' || name;
-END;
-\$function\$
+            CREATE OR REPLACE FUNCTION public.hello(name character varying) RETURNS character varying
+            LANGUAGE plpgsql AS \$function\$
+            BEGIN
+                RETURN 'Hello ' || name;
+            END;
+            \$function\$
         ";
 
         $this->assertEquals(StringParser::trimLines($expected), StringParser::trimLines($diff[0]['diff'][0]));

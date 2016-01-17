@@ -125,7 +125,7 @@ trait TablesTrait
 
                 if (array_key_exists('grants', $this->master['tables'][$table])) {
                     foreach ((array)$this->master['tables'][$table]['grants'] as $grant) {
-                        if (!empty($grant)) {
+                        if (!empty($grant) && $this->settings['alter_owner'] === true) {
                             $buffer .= "\nGRANT ALL ON TABLE {$this->schema}.{$table} TO {$grant};";
                         }
                     }
