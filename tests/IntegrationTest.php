@@ -27,6 +27,17 @@ class IntegrationTest extends \PHPUnit_Framework_TestCase
         $this->assertCount(0, $diff[0]['diff']);
     }
 
+    public function test_compare_same_squema_diff()
+    {
+        $dbVc = new Db();
+        $dbVc->setMaster(new DbConn($this->conf['devel']));
+        $dbVc->setSlave(new DbConn($this->conf['devel']));
+
+        $diff    = $dbVc->diff('public');
+
+        $this->assertEquals("Already sync : gonzalo1\n", $diff);
+    }
+
     public function test_compare_same_squema_summary()
     {
         $dbVc = new Db();

@@ -39,7 +39,7 @@ class Db
         $data         = $this->createDiff();
         foreach ($data as $row) {
             if (count($row['summary']) > 0) {
-                $title    = "DBNAME : " . $row['db']->dbName();
+                $title    = "DBNAME : " . $row['db']->getDbname();
                 $buffer[] = $title;
                 $buffer[] = str_repeat("-", strlen($title));
 
@@ -96,7 +96,7 @@ class Db
         $data         = $this->createDiff();
         foreach ($data as $row) {
             if (count($row['diff']) > 0) {
-                $title    = "DBNAME : " . $row['db']->dbName();
+                $title    = "DBNAME : " . $row['db']->getDbname();
                 $buffer[] = $title;
                 $buffer[] = str_repeat("-", strlen($title));
 
@@ -105,7 +105,7 @@ class Db
                 }
                 $buffer[] = "\n";
             } else {
-                $buffer[] = "Already sync : " . $row['db']->dbName();
+                $buffer[] = "Already sync : " . $row['db']->getDbname();
             }
         }
 
