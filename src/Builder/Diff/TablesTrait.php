@@ -98,13 +98,13 @@ trait TablesTrait
                                 }
                             }
                         }
+                        $constraintSrc = $constraintInfo['src'];
+
                         switch ($constraintInfo['type']) {
                             case 'CHECK':
-                                $constraintSrc = $constraintInfo['src'];
                                 $_columns[]    = "CONSTRAINT {$constraint} CHECK {$constraintSrc}";
                                 break;
                             case 'PRIMARY KEY':
-                                $constraintSrc = $constraintInfo['src'];
                                 $columns       = implode(', ', $columns);
                                 $_columns[]    = "CONSTRAINT {$constraint} PRIMARY KEY ({$columns})";
                                 break;
