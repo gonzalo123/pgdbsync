@@ -99,14 +99,16 @@ trait TablesTrait
                             }
                         }
                         $constraintSrc = $constraintInfo['src'];
-
                         switch ($constraintInfo['type']) {
+                            case 'UNIQUE':
+                                $_columns[] = "CONSTRAINT {$constraint} UNIQUE ({$columns[0]})";
+                                break;
                             case 'CHECK':
-                                $_columns[]    = "CONSTRAINT {$constraint} CHECK {$constraintSrc}";
+                                $_columns[] = "CONSTRAINT {$constraint} CHECK {$constraintSrc}";
                                 break;
                             case 'PRIMARY KEY':
-                                $columns       = implode(', ', $columns);
-                                $_columns[]    = "CONSTRAINT {$constraint} PRIMARY KEY ({$columns})";
+                                $columns    = implode(', ', $columns);
+                                $_columns[] = "CONSTRAINT {$constraint} PRIMARY KEY ({$columns})";
                                 break;
                         }
                     }
