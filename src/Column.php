@@ -39,9 +39,6 @@ class Column
 
     public function getPrecision()
     {
-
-        $meta = $this->_meta;
-
         switch (strtolower($this->_meta['data_type'])) {
             case 'character varying':
                 return $this->_meta['character_maximum_length'];
@@ -55,7 +52,9 @@ class Column
             case 'bigint':
                 return null;
             case 'numeric':
-                return $this->_meta['numeric_precision'] . ', ' . $this->_meta['numeric_scale'];
+                return ($this->_meta['numeric_precision']) ?
+                    $this->_meta['numeric_precision'] . ', ' . $this->_meta['numeric_scale'] :
+                    null;
 
             default:
                 return null;

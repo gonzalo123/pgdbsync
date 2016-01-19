@@ -2,9 +2,13 @@
 
 include_once __DIR__ . '/fixtures/Database.php';
 
-use Pgdbsync\DbConn;
+include_once __DIR__ . '/fixtures/Database.php';
+include_once __DIR__ . '/fixtures/StringParser.php';
 
-class TableColumnTest extends \PHPUnit_Framework_TestCase
+use Pgdbsync\DbConn;
+use Pgdbsync\Db;
+
+class TableColumnNumberTest extends \PHPUnit_Framework_TestCase
 {
     private $database;
     private $conf;
@@ -16,48 +20,40 @@ class TableColumnTest extends \PHPUnit_Framework_TestCase
 
     public function test_table_with_different_colums_databases()
     {
-        $dbVc = new Pgdbsync\Db();
+        $dbVc = new Db();
         $dbVc->setMaster(new DbConn($this->conf['devel']));
         $dbVc->setSlave(new DbConn($this->conf['devel2']));
 
         $diff = $dbVc->raw('public');
 
         $this->assertCount(1, $diff);
-        $this->assertCount(2, $diff[0]['diff']);
+        $this->assertCount(1, $diff[0]['diff']);
 
-        $this->assertEquals("add column \"name\" to table testtable", trim($diff[0]['diff'][0]));
-        $this->assertEquals("delete column \"name2\" to table testtable", trim($diff[0]['diff'][1]));
+        $expected = "CREATE TABLE public.testtable(
+             \"userid\" character varying NOT NULL,
+             \"id\" numeric,
+             CONSTRAINT testtable_pkey PRIMARY KEY (\"userid\")
+            );
+        ";
+        $this->assertEquals(StringParser::trimLines($expected), StringParser::trimLines($diff[0]['diff'][0]));
     }
 
     public function setUp()
     {
         $this->database = new Database($this->conf);
         $this->database->executeInDatabase('devel', function (PDO $conn) {
+            $user = $this->conf['devel2']['USER'];
             $conn->exec("CREATE TABLE testTable (
                 userid VARCHAR PRIMARY KEY NOT NULL,
-                password VARCHAR NOT NULL,
-                name VARCHAR,
-                surname VARCHAR
+                id numeric
             );");
-        });
-
-        $this->database->executeInDatabase('devel2', function (PDO $conn) {
-            $conn->exec("CREATE TABLE testTable (
-                userid VARCHAR PRIMARY KEY NOT NULL,
-                password VARCHAR NOT NULL ,
-                name2 VARCHAR,
-                surname VARCHAR
-            );");
+            $conn->exec("GRANT ALL ON TABLE public.testtable TO {$user}");
         });
     }
 
     public function tearDown()
     {
         $this->database->executeInDatabase('devel', function(PDO $conn) {
-            $conn->exec("DROP TABLE testTable");
-        });
-
-        $this->database->executeInDatabase('devel2', function(PDO $conn) {
             $conn->exec("DROP TABLE testTable");
         });
     }

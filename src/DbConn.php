@@ -10,25 +10,23 @@ class DbConn
         $this->conf = $conf;
     }
 
+    /** @var \PDO */
     private $pdo = null;
 
     public function connect()
     {
-        $dsn = $this->getDsn();
-
-        $this->pdo = new \PDO($dsn, $this->conf['USER'], isset($this->conf['PASSWORD']) ? $this->conf['PASSWORD'] : null);
+        $this->pdo = new \PDO($this->getDsn(), $this->conf['USER'], isset($this->conf['PASSWORD']) ? $this->conf['PASSWORD'] : null);
         $this->pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-        $this->dsn = $dsn;
 
         return $this;
     }
 
-    public function dbName()
+    public function getDbname()
     {
         return isset($this->conf['DBNAME']) ? $this->conf['DBNAME'] : null;
     }
 
-    public function dbHost()
+    public function getDbHost()
     {
         return isset($this->conf['HOST']) ? $this->conf['HOST'] : null;
     }
@@ -55,7 +53,7 @@ class DbConn
 
     private $_schema = null;
 
-    public function schema($schema)
+    public function setSchema($schema)
     {
         $this->_schema = $schema;
 
@@ -63,10 +61,10 @@ class DbConn
     }
 
     const SQL_GET_VIEWS = "
-		SELECT *
-		FROM pg_views
-		WHERE
-			schemaname = :SCHEMA
+        SELECT *
+        FROM pg_views
+        WHERE
+            schemaname = :SCHEMA
     ";
 
     function getViews()
@@ -84,15 +82,15 @@ class DbConn
     }
 
     const SQL_GET_SEQUENCES = "
-		SELECT C.relname, R.rolname \"owner\", relacl
-		FROM pg_class C, pg_catalog.pg_roles R
- 		WHERE C.relkind = 'S'  
-   			AND C.relowner = R.oid
-   			AND C.relnamespace IN (
-        		SELECT oid
-          		FROM pg_namespace
-         		WHERE nspname = :SCHEMA
-			);
+        SELECT C.relname, R.rolname \"owner\", relacl
+        FROM pg_class C, pg_catalog.pg_roles R
+         WHERE C.relkind = 'S'  
+               AND C.relowner = R.oid
+               AND C.relnamespace IN (
+                SELECT oid
+                  FROM pg_namespace
+                 WHERE nspname = :SCHEMA
+            );
     ";
 
     function getSequences()
@@ -110,27 +108,27 @@ class DbConn
     }
 
     const SQL_GET_FUNCTIONS = "
-		SELECT
-		    A.OID, B.NSPNAME, A.PRONAME, T.LANNAME,
-		    (SELECT T.TYPNAME FROM PG_TYPE T WHERE T.OID=A.PRORETTYPE) AS TIPORETORNO,
-		    pronargs,
-		    pronargdefaults,
-		    proargtypes,
-		    proargmodes,
-		    proargnames,
-		    proargdefaults,
-		    proallargtypes
-		FROM
-		    PG_PROC A,
-		    PG_NAMESPACE B,
-		    PG_LANGUAGE T
-		WHERE
-		    A.PRONAMESPACE=B.OID AND
-		    A.PROLANG=T.OID AND
-		    B.NSPNAME = :SCHEMA
-		ORDER BY
-		    B.NSPNAME, A.PRONAME
-	";
+        SELECT
+            A.OID, B.NSPNAME, A.PRONAME, T.LANNAME,
+            (SELECT T.TYPNAME FROM PG_TYPE T WHERE T.OID=A.PRORETTYPE) AS TIPORETORNO,
+            pronargs,
+            pronargdefaults,
+            proargtypes,
+            proargmodes,
+            proargnames,
+            proargdefaults,
+            proallargtypes
+        FROM
+            PG_PROC A,
+            PG_NAMESPACE B,
+            PG_LANGUAGE T
+        WHERE
+            A.PRONAMESPACE=B.OID AND
+            A.PROLANG=T.OID AND
+            B.NSPNAME = :SCHEMA
+        ORDER BY
+            B.NSPNAME, A.PRONAME
+    ";
 
     function exec($sql)
     {
@@ -155,13 +153,13 @@ class DbConn
     {
         $sql = "select *, (schemaname || '.' || tablename)::regclass::oid from pg_catalog.pg_tables where schemaname=:SCHEMA order by schemaname, tablename";
         if (is_null($this->_schema)) {
-            throw new Exception("Schema must set");
+            throw new \Exception("Schema must set");
         }
         $out  = [];
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute(['SCHEMA' => strtolower($this->_schema)]);
         while ($row = $stmt->fetch()) {
-            $out[] = new Table($this->pdo, $row['schemaname'], $row['tablename'], $row['tableowner'], $row['tablespace'], $row['hasindexes'], $this->dsn, $row['oid']);
+            $out[] = new Table($this->pdo, $row['schemaname'], $row['tablename'], $row['tableowner'], $row['tablespace'], $row['hasindexes'], $row['oid']);
         }
         $stmt = null;
 

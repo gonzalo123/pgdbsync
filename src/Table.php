@@ -10,14 +10,13 @@ class Table
     private $_tablespace = null;
     private $_oid        = null;
 
-    function __construct(\PDO &$pdo, $schema, $tablename, $owner, $tablespace, $hasindexes, $dsn, $oid)
+    function __construct(\PDO $pdo, $schema, $tablename, $owner, $tablespace, $hasindexes, $oid)
     {
         $this->_pdo        = $pdo;
         $this->_schema     = $schema;
         $this->_tablename  = $tablename;
         $this->_owner      = $owner;
         $this->_tablespace = $tablespace;
-        $this->_dsn        = $dsn;
         $this->_oid        = $oid;
     }
 
@@ -43,15 +42,14 @@ class Table
 
     const SQL_GET_GRANTS = "
     select distinct grantee 
-		from information_schema.table_privileges  
-	where 
-	    table_schema = :SCHEMA and 
-		table_name = :TABLE
+        from information_schema.table_privileges  
+    where 
+        table_schema = :SCHEMA and 
+        table_name = :TABLE
     ";
 
     public function grants()
     {
-        $pdo = $this->_pdo;
         $out = [];
 
         $stmt = $this->_pdo->prepare(self::SQL_GET_GRANTS);
@@ -68,19 +66,18 @@ class Table
     }
 
     const SQL_GET_COLUMNS = "
-	    SELECT
-			*
-		FROM
-			information_schema.columns a
-		WHERE
-			table_schema = :SCHEMA and 
-			table_name = :TABLE
-		ORDER BY
-			ordinal_position";
+        SELECT
+            *
+        FROM
+            information_schema.columns a
+        WHERE
+            table_schema = :SCHEMA and 
+            table_name = :TABLE
+        ORDER BY
+            ordinal_position";
 
     public function columns()
     {
-        $pdo = $this->_pdo;
         $out = [];
 
         $stmt = $this->_pdo->prepare(self::SQL_GET_COLUMNS);
@@ -97,24 +94,24 @@ class Table
     }
 
     const SQL_GET_CONSTRAINTS = "
-	    SELECT
-		    DISTINCT ON (a.constraint_name, a.table_name, b.confrelid, b.conname, b.conrelid, b.conkey, b.confkey, d.attname) 
+        SELECT
+            DISTINCT ON (a.constraint_name, a.table_name, b.confrelid, b.conname, b.conrelid, b.conkey, b.confkey, d.attname) 
             *
-		FROM
-			information_schema.table_constraints a,
-			pg_constraint b
+        FROM
+            information_schema.table_constraints a,
+            pg_constraint b
         LEFT JOIN pg_class AS c 
-         	ON (b.confrelid = c.relfilenode)
+             ON (b.confrelid = c.relfilenode)
         
          LEFT JOIN pg_attribute AS d
-        	 ON (
-         		c.relfilenode = d.attrelid AND
-         		d.attnum = ANY (b.confkey)
-         	)
-		WHERE
-			a.constraint_name = b.conname 
-			AND table_schema = :SCHEMA 
-			AND table_name = :TABLE 
+             ON (
+                 c.relfilenode = d.attrelid AND
+                 d.attnum = ANY (b.confkey)
+             )
+        WHERE
+            a.constraint_name = b.conname 
+            AND table_schema = :SCHEMA 
+            AND table_name = :TABLE 
             AND b.conrelid = (:SCHEMA || '.' || a.table_name)::regclass::oid   
             ";
 

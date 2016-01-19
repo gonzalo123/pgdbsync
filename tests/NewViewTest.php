@@ -1,10 +1,12 @@
 <?php
 
 include_once __DIR__ . '/fixtures/Database.php';
+include_once __DIR__ . '/fixtures/StringParser.php';
 
 use Pgdbsync\DbConn;
+use Pgdbsync\Db;
 
-class NewTableTest extends \PHPUnit_Framework_TestCase
+class NewViewTest extends \PHPUnit_Framework_TestCase
 {
     private $database;
     private $conf;
@@ -14,30 +16,27 @@ class NewTableTest extends \PHPUnit_Framework_TestCase
         $this->conf = parse_ini_file(__DIR__ . "/fixtures/conf.ini", true);
     }
 
-    public function test_new_table()
+    public function test_new_view()
     {
-        $dbVc = new Pgdbsync\Db();
+        $dbVc = new Db();
         $dbVc->setMaster(new DbConn($this->conf['devel']));
         $dbVc->setSlave(new DbConn($this->conf['devel2']));
 
-        $user = $this->conf['devel2']['USER'];
         $diff = $dbVc->raw('public');
 
         $this->assertCount(1, $diff);
-        $this->assertCount(1, $diff[0]['diff']);
-
+        $this->assertCount(2, $diff[0]['diff']);
 
         $expected = "
-CREATE TABLE public.testtable(
- \"userid\" character varying NOT NULL,
- \"password\" character varying NOT NULL,
- \"name\" character varying,
- \"surname\" character varying,
- CONSTRAINT testtable_pkey PRIMARY KEY (\"userid\")
-);
-GRANT ALL ON TABLE public.testtable TO {$user};";
+            CREATE OR REPLACE VIEW public.myview AS
+               SELECT testtable.userid,
+                testtable.password,
+                testtable.name,
+                testtable.surname
+               FROM testtable
+              WHERE ((testtable.surname)::text = 'x'::text);";
 
-        $this->assertEquals($expected, $diff[0]['diff'][0]);
+        $this->assertEquals(StringParser::trimLines($expected), StringParser::trimLines($diff[0]['diff'][0]));
     }
 
     public function setUp()
@@ -51,13 +50,18 @@ GRANT ALL ON TABLE public.testtable TO {$user};";
                 name VARCHAR,
                 surname VARCHAR
             );");
-            $conn->exec("GRANT ALL ON TABLE public.testtable TO {$user}");
+            $conn->exec("CREATE VIEW myView AS
+                SELECT *
+                FROM testTable
+                WHERE surname = 'x';");
+            $conn->exec("GRANT ALL ON TABLE public.myview TO {$user}");
         });
     }
 
     public function tearDown()
     {
         $this->database->executeInDatabase('devel', function(PDO $conn) {
+            $conn->exec("DROP view myView");
             $conn->exec("DROP TABLE testTable");
         });
     }

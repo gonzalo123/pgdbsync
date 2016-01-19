@@ -18,7 +18,7 @@
     }
   },
   "bin": [
-    "pgdbsync"
+    "bin/pgdbsync"
   ],
   "extra": {
     "branch-alias": {

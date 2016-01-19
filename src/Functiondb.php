@@ -14,12 +14,11 @@ class Functiondb
         $this->_schema     = $schema;
         $this->_meta       = $meta;
         $oid               = $meta['oid'];
-        $this->_definition = $this->getFunctionInfo($schema, $oid);
+        $this->_definition = $this->getFunctionInfo($oid);
     }
 
-    private function getFunctionInfo($schema, $oid)
+    private function getFunctionInfo($oid)
     {
-        $out  = [];
         $stmt = $this->_pdo->prepare("select pg_get_functiondef({$oid})");
         $stmt->execute();
         $out = $stmt->fetchAll();
