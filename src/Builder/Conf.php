@@ -95,6 +95,7 @@ class Conf
                 'precision' => $column->getPrecision(),
                 'nullable'  => $column->getIsNullable(),
                 'order'     => $column->getOrder(),
+                'default'   => $column->getDefault(),
             ];
         }
     }
