@@ -157,7 +157,6 @@ trait TablesTrait
                 $masterType = $this->master['tables'][$table]['columns'][$column]['type'];
                 $masterPrecision = (! empty($this->master['tables'][$table]['columns'][$column]['precision'])) ? $this->master['tables'][$table]['columns'][$column]['precision'] : "";
                 $columnDefault = (! empty($this->master['tables'][$table]['columns'][$column]['default'])) ? " DEFAULT ".$this->master['tables'][$table]['columns'][$column]['default'] : "";
-                var_dump($this->master['tables'][$table]['columns'][$column]['nullable']);
                 $nullable = $this->master['tables'][$table]['columns'][$column]['nullable'] ? "" : " NOT NULL";
                 $masterPrecision = $masterPrecision == '' ? null : " ({$masterPrecision})";
                 $this->diff[] = "ALTER TABLE {$this->schema}.{$table} ADD {$column} {$masterType}" . $masterPrecision . $columnDefault . $nullable . ";";

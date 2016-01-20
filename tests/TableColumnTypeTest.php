@@ -37,7 +37,7 @@ class TableColumnTypeTest extends \PHPUnit_Framework_TestCase
             $conn->exec("CREATE TABLE testTable (
                 userid VARCHAR PRIMARY KEY NOT NULL,
                 password VARCHAR NOT NULL,
-                name VARCHAR,
+                name numeric,
                 surname VARCHAR
             );");
         });
