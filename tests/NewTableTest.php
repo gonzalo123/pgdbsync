@@ -34,7 +34,7 @@ class NewTableTest extends \PHPUnit_Framework_TestCase
             CREATE TABLE public.testtable(
              \"userid\" character varying NOT NULL,
              \"password\" character varying NOT NULL,
-             \"name\" character varying,
+             \"myid\" numeric,
              \"surname\" character varying,
              CONSTRAINT testtable_pkey PRIMARY KEY (\"userid\")
         );";
@@ -50,7 +50,7 @@ class NewTableTest extends \PHPUnit_Framework_TestCase
             $conn->exec("CREATE TABLE testTable (
                 userid VARCHAR PRIMARY KEY NOT NULL,
                 password VARCHAR NOT NULL ,
-                name VARCHAR,
+                myid numeric,
                 surname VARCHAR
             );");
             $conn->exec("GRANT ALL ON TABLE public.testtable TO {$user}");
