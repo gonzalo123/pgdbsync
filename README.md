@@ -10,7 +10,7 @@ The usage of pgdbsync command line script is the following one:
  -c [config]
  -f [from database]
  -t [to database]
- -a [action: diff | summary | run]
+ -a [action: diff | summary | run] 
 ```
 
 ## usage examples

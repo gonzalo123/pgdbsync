@@ -2,6 +2,8 @@
 
 namespace Pgdbsync\Builder\Diff;
 
+use Pgdbsync\Constraint;
+
 trait TablesTrait
 {
     protected function diffTables()
@@ -152,7 +154,12 @@ trait TablesTrait
     {
         if (count((array)$columns) > 0) {
             foreach ($columns as $column) {
-                $this->diff[]                        = "ADD COLUMN {$column} TO TABLE {$table}";
+                $masterType = $this->master['tables'][$table]['columns'][$column]['type'];
+                $masterPrecision = (! empty($this->master['tables'][$table]['columns'][$column]['precision'])) ? $this->master['tables'][$table]['columns'][$column]['precision'] : "";
+                $columnDefault = (! empty($this->master['tables'][$table]['columns'][$column]['default'])) ? " DEFAULT ".$this->master['tables'][$table]['columns'][$column]['default'] : "";
+                var_dump($this->master['tables'][$table]['columns'][$column]['nullable']);
+                $nullable = $this->master['tables'][$table]['columns'][$column]['nullable'] ? "" : " NOT NULL";
+                $this->diff[] = "\nALTER TABLE {$this->schema}.{$table} ADD {$column} {$masterType}" . "({$masterPrecision})" . $columnDefault . $nullable . ";";
                 $this->summary['column']['create'][] = "{$this->schema}.{$table}.{$column}";
             }
         }
@@ -170,10 +177,12 @@ trait TablesTrait
 
     protected function alterColumn($table, $column)
     {
-        $masterType                         = $this->master['tables'][$table]['columns'][$column]['type'];
-        $masterPrecision                    = $this->master['tables'][$table]['columns'][$column]['precision'];
-        $this->diff[]                       = "ALTER TABLE {$this->schema}.{$table} ALTER {$column} TYPE {$masterType}" . (empty($masterPrecision) ? "" : ("(" . $masterPrecision . ")")) . ";";
-        $this->summary['column']['alter'][] = "{$this->schema}.{$table} {$column}";
+        $masterType = $this->master['tables'][$table]['columns'][$column]['type'];
+        $masterPrecision = (! empty($this->master['tables'][$table]['columns'][$column]['precision'])) ? $this->master['tables'][$table]['columns'][$column]['precision'] : "";
+        $columnDefault = (! empty($this->master['tables'][$table]['columns'][$column]['default'])) ? " SET DEFAULT ".$this->master['tables'][$table]['columns'][$column]['default'] : "";
+        $nullable = $this->master['tables'][$table]['columns'][$column]['nullable'] ? "" : " SET NOT NULL";
+        $diff[] = "\nALTER TABLE {$this->schema}.{$table} ALTER {$column} TYPE {$masterType}" . "({$masterPrecision})" . $columnDefault . $nullable . ";";
+        $summary['column']['alter'][] = "{$this->schema}.{$table} {$column}";
     }
 
     protected function addConstraint($table, $constraint)
