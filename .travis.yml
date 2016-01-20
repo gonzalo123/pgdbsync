@@ -14,5 +14,5 @@ services:
 
 before_script:
   - cp tests/fixtures/conf.travis.ini tests/fixtures/conf.ini
-  - psql -c 'create database gonzalo1;' -U postgres
-  - psql -c 'create database gonzalo2;' -U postgres
+  - psql -c 'create database testDatabase1;' -U postgres
+  - psql -c 'create database testDatabase2;' -U postgres

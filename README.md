@@ -10,7 +10,7 @@ The usage of pgdbsync command line script is the following one:
  -c [config]
  -f [from database]
  -t [to database]
- -a [action: diff | summary | run] 
+ -a [action: diff | summary | run]
 ```
 
 ## usage examples
@@ -78,3 +78,9 @@ drop view web.testview;
 
 [OK]  end process
 ```
+
+## Notes to run tests
+To run tests locally the script asumes that:
+- You have a PostgreSQL running at localhost (I'm using postgresapp.com for testing)
+- Two empty databases called testDatabase1 and testDatabase2
+- One user to login called "username" and with password "password"
