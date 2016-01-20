@@ -81,6 +81,6 @@ drop view web.testview;
 
 ## Notes to run tests
 To run tests locally the script asumes that:
-- You have a PostgreSQL running at localhost (I'm using postgresapp.com for testing)
+- You have a PostgreSQL running at localhost (I'm using http://postgresapp.com for testing)
 - Two empty databases called testDatabase1 and testDatabase2
 - One user to login called "username" and with password "password"
