@@ -29,7 +29,7 @@ class TableColumnTest extends \PHPUnit_Framework_TestCase
         $this->assertCount(1, $diff);
         $this->assertCount(2, $diff[0]['diff']);
 
-        $this->assertEquals("ADD COLUMN \"name\" TO TABLE testtable", $diff[0]['diff'][0]);
+        $this->assertEquals("ALTER TABLE public.testtable ADD \"name\" character varying;", $diff[0]['diff'][0]);
         $this->assertEquals("DELETE COLUMN \"name2\" TO TABLE testtable", $diff[0]['diff'][1]);
     }
 
