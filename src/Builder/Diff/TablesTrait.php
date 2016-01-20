@@ -182,8 +182,8 @@ trait TablesTrait
         $columnDefault = (! empty($this->master['tables'][$table]['columns'][$column]['default'])) ? " SET DEFAULT ".$this->master['tables'][$table]['columns'][$column]['default'] : "";
         $nullable = $this->master['tables'][$table]['columns'][$column]['nullable'] ? "" : " SET NOT NULL";
         $masterPrecision = $masterPrecision == '' ? null : " ({$masterPrecision})";
-        $diff[] = "ALTER TABLE {$this->schema}.{$table} ALTER {$column} TYPE {$masterType}" . $masterPrecision . $columnDefault . $nullable . ";";
-        $summary['column']['alter'][] = "{$this->schema}.{$table} {$column}";
+        $this->diff[] = "ALTER TABLE {$this->schema}.{$table} ALTER {$column} TYPE {$masterType}" . $masterPrecision . $columnDefault . $nullable . ";";
+        $this->summary['column']['alter'][] = "{$this->schema}.{$table} {$column}";
     }
 
     protected function addConstraint($table, $constraint)
