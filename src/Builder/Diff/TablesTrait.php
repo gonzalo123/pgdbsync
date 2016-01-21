@@ -240,10 +240,7 @@ trait TablesTrait
                     $deleteAction = strtoupper(Constraint::$ON_ACTION_MAP[$constraintData['delete_option']]);
                     $updateAction = strtoupper(Constraint::$ON_ACTION_MAP[$constraintData['update_option']]);
                     $match        = strtoupper(Constraint::$MATCH_MAP[$constraintData['match_option']]);
-                    $this->diff[] = "ALTER TABLE {$this->schema}.{$table}
-                    ADD CONSTRAINT {$constraint} {$type} (" . implode(', ', $columns) . ")
-                    REFERENCES {$fkSchema}.{$fkTable} (" . implode(', ', $fkColumns) . ")  MATCH {$match}
-                    ON UPDATE {$updateAction} ON DELETE {$deleteAction};";
+                    $this->diff[] = "ALTER TABLE {$this->schema}.{$table} ADD CONSTRAINT {$constraint} {$type} (" . implode(', ', $columns) . ") REFERENCES {$fkSchema}.{$fkTable} (" . implode(', ', $fkColumns) . ") MATCH {$match} ON UPDATE {$updateAction} ON DELETE {$deleteAction};";
                 } else {
                     $this->summary[] = 'CONSTRAINT ' . $constraint . ' FOR TABLE ' . $this->schema . '.' . $table . ' COULD NOT BE ADDED BECAUSE NO COLUMNS WERE DETECTED';
                 }
