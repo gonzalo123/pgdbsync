@@ -35,7 +35,7 @@ class IntegrationTest extends \PHPUnit_Framework_TestCase
 
         $diff    = $dbVc->diff('public');
 
-        $this->assertEquals("Already sync : testdb1\n", $diff);
+        $this->assertEquals("Already sync : db1\n", $diff);
     }
 
     public function test_compare_same_squema_summary()
