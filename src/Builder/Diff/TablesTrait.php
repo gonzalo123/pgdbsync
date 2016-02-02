@@ -165,8 +165,8 @@ trait TablesTrait
         if (count((array)$columns) > 0) {
             foreach ($columns as $column) {
                 $masterType                          = $this->master['tables'][$table]['columns'][$column]['type'];
-                $masterPrecision                     = (!empty($this->master['tables'][$table]['columns'][$column]['precision'])) ? $this->master['tables'][$table]['columns'][$column]['precision'] : "";
-                $columnDefault                       = (!empty($this->master['tables'][$table]['columns'][$column]['default'])) ? " DEFAULT " . $this->master['tables'][$table]['columns'][$column]['default'] : "";
+                $masterPrecision                     = (isset($this->master['tables'][$table]['columns'][$column]['precision'])) ? $this->master['tables'][$table]['columns'][$column]['precision'] : "";
+                $columnDefault                       = (isset($this->master['tables'][$table]['columns'][$column]['default'])) ? " DEFAULT " . $this->master['tables'][$table]['columns'][$column]['default'] : "";
                 $nullable                            = $this->master['tables'][$table]['columns'][$column]['nullable'] ? "" : " NOT NULL";
                 $masterPrecision                     = $masterPrecision == '' ? null : " ({$masterPrecision})";
                 $this->diff[]                        = "ALTER TABLE {$this->schema}.{$table} ADD {$column} {$masterType}" . $masterPrecision . $columnDefault . $nullable . ";";
@@ -179,7 +179,7 @@ trait TablesTrait
     {
         if (count((array)$columns) > 0) {
             foreach ($columns as $column) {
-                $this->diff[]                      = "DELETE COLUMN {$column} TO TABLE {$table}";
+                $this->diff[]                      = "ALTER TABLE {$this->schema}.{$table} DROP COLUMN {$column}";
                 $this->summary['column']['drop'][] = "{$this->schema}.{$table} {$column}";
             }
         }
