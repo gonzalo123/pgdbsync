@@ -128,19 +128,19 @@ class Db
         return $out;
     }
 
-    private function createDiffPerDb(DbConn $slaveDb, $master)
+    private function createDiffPerDb(DbConn $dbConn, $master)
     {
-        $slave = $this->buildConf($slaveDb->connect());
+        $slave = $this->buildConf($dbConn->connect());
         if (md5(serialize($master)) == md5(serialize($slave))) {
             $out = [
-                'db'      => $slaveDb,
+                'db'      => $dbConn,
                 'diff'    => [],
                 'summary' => []
             ];
         } else {
             $diff             = new Diff($this->settings, $this->schema);
             $diffResult       = $diff->getDiff($master, $slave);
-            $diffResult['db'] = $slaveDb;
+            $diffResult['db'] = $dbConn;
 
             $out = $diffResult;
         }

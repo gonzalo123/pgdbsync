@@ -23,10 +23,11 @@ class TableColumnTypeTest extends \PHPUnit_Framework_TestCase
         $dbVc->setSlave(new DbConn($this->conf['devel2']));
 
         $diff = $dbVc->raw('public');
+
         $this->assertCount(1, $diff);
         $this->assertCount(1, $diff[0]['diff']);
 
-        $expected = "ALTER TABLE public.testtable ALTER \"name\" TYPE character varying;";
+        $expected = "ALTER TABLE public.testtable ALTER \"name\" TYPE numeric;";
         $this->assertEquals($expected, trim($diff[0]['diff'][0]));
     }
 
@@ -37,7 +38,7 @@ class TableColumnTypeTest extends \PHPUnit_Framework_TestCase
             $conn->exec("CREATE TABLE testTable (
                 userid VARCHAR PRIMARY KEY NOT NULL,
                 password VARCHAR NOT NULL,
-                name VARCHAR,
+                name numeric,
                 surname VARCHAR
             );");
         });

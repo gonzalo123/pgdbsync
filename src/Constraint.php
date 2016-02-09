@@ -18,7 +18,8 @@ class Constraint
     public static $MATCH_MAP = [
         'f' => 'full',
         'p' => 'partial',
-        'u' => 'simple'
+        'u' => 'simple',
+        's' => 'simple' // http://www.postgresql.org/message-id/CA+OCxowezVvmKW-6mhwaZ4KbJOAY9AbLJxY+vi1o2B6rpuhy6w@mail.gmail.com
     ];
 
     function __construct(\PDO $pdo, $meta)

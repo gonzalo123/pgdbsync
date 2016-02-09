@@ -60,6 +60,7 @@ trait ViewsTrait
         $this->summary['view']['create'][] = "{$this->schema}.{$view}";
     }
 
+
     protected function createViews($views)
     {
         if (count((array)$views) > 0) {
