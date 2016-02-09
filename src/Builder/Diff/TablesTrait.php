@@ -96,8 +96,9 @@ trait TablesTrait
                 foreach ((array)$this->master['tables'][$table]['columns'] as $column => $columnConf) {
                     $type       = $columnConf['type'];
                     $precision  = $columnConf['precision'];
+                    $columnDefault = (isset($columnConf['default'])) ? " DEFAULT " . $columnConf['default'] : "";
                     $nullable   = $columnConf['nullable'] ? null : ' NOT NULL';
-                    $_columns[] = "{$column} {$type}" . ((!empty($precision)) ? "({$precision})" : null) . $nullable;
+                    $_columns[] = "{$column} {$type}" . ((!empty($precision)) ? "({$precision})" : null) . $columnDefault . $nullable;
                 }
                 if (array_key_exists('constraints', $this->master['tables'][$table])) {
                     foreach ((array)$this->master['tables'][$table]['constraints'] as $constraint => $constraintInfo) {
