@@ -58,8 +58,18 @@ trait TablesTrait
             }
 
             // check new or removed constraints
-            $masterConstraints = array_keys((array)$this->master['tables'][$table]['constraints']);
-            $slaveConstraints  = array_keys((array)$this->slave['tables'][$table]['constraints']);
+            if (isset($this->master['tables'][$table]['constraints'])) {
+                $masterConstraints = array_keys((array)$this->master['tables'][$table]['constraints']);
+            } else {
+                $masterConstraints = [];
+            }
+
+            if (isset($this->slave['tables'][$table]['constraints'])) {
+                $slaveConstraints = array_keys((array)$this->slave['tables'][$table]['constraints']);
+            } else {
+                $slaveConstraints = [];
+            }
+
             // Delete missing constraints first
             $deletedConstraints = array_diff($slaveConstraints, $masterConstraints);
             if (count($deletedConstraints) > 0) {
@@ -86,8 +96,9 @@ trait TablesTrait
                 foreach ((array)$this->master['tables'][$table]['columns'] as $column => $columnConf) {
                     $type       = $columnConf['type'];
                     $precision  = $columnConf['precision'];
+                    $columnDefault = (isset($columnConf['default'])) ? " DEFAULT " . $columnConf['default'] : "";
                     $nullable   = $columnConf['nullable'] ? null : ' NOT NULL';
-                    $_columns[] = "{$column} {$type}" . ((!empty($precision)) ? "({$precision})" : null) . $nullable;
+                    $_columns[] = "{$column} {$type}" . ((!empty($precision)) ? "({$precision})" : null) . $columnDefault . $nullable;
                 }
                 if (array_key_exists('constraints', $this->master['tables'][$table])) {
                     foreach ((array)$this->master['tables'][$table]['constraints'] as $constraint => $constraintInfo) {
@@ -154,12 +165,12 @@ trait TablesTrait
     {
         if (count((array)$columns) > 0) {
             foreach ($columns as $column) {
-                $masterType = $this->master['tables'][$table]['columns'][$column]['type'];
-                $masterPrecision = (! empty($this->master['tables'][$table]['columns'][$column]['precision'])) ? $this->master['tables'][$table]['columns'][$column]['precision'] : "";
-                $columnDefault = (! empty($this->master['tables'][$table]['columns'][$column]['default'])) ? " DEFAULT ".$this->master['tables'][$table]['columns'][$column]['default'] : "";
-                var_dump($this->master['tables'][$table]['columns'][$column]['nullable']);
-                $nullable = $this->master['tables'][$table]['columns'][$column]['nullable'] ? "" : " NOT NULL";
-                $this->diff[] = "\nALTER TABLE {$this->schema}.{$table} ADD {$column} {$masterType}" . "({$masterPrecision})" . $columnDefault . $nullable . ";";
+                $masterType                          = $this->master['tables'][$table]['columns'][$column]['type'];
+                $masterPrecision                     = (isset($this->master['tables'][$table]['columns'][$column]['precision'])) ? $this->master['tables'][$table]['columns'][$column]['precision'] : "";
+                $columnDefault                       = (isset($this->master['tables'][$table]['columns'][$column]['default'])) ? " DEFAULT " . $this->master['tables'][$table]['columns'][$column]['default'] : "";
+                $nullable                            = $this->master['tables'][$table]['columns'][$column]['nullable'] ? "" : " NOT NULL";
+                $masterPrecision                     = $masterPrecision == '' ? null : " ({$masterPrecision})";
+                $this->diff[]                        = "ALTER TABLE {$this->schema}.{$table} ADD {$column} {$masterType}" . $masterPrecision . $columnDefault . $nullable . ";";
                 $this->summary['column']['create'][] = "{$this->schema}.{$table}.{$column}";
             }
         }
@@ -169,7 +180,7 @@ trait TablesTrait
     {
         if (count((array)$columns) > 0) {
             foreach ($columns as $column) {
-                $this->diff[]                      = "DELETE COLUMN {$column} TO TABLE {$table}";
+                $this->diff[]                      = "ALTER TABLE {$this->schema}.{$table} DROP COLUMN {$column}";
                 $this->summary['column']['drop'][] = "{$this->schema}.{$table} {$column}";
             }
         }
@@ -177,12 +188,13 @@ trait TablesTrait
 
     protected function alterColumn($table, $column)
     {
-        $masterType = $this->master['tables'][$table]['columns'][$column]['type'];
-        $masterPrecision = (! empty($this->master['tables'][$table]['columns'][$column]['precision'])) ? $this->master['tables'][$table]['columns'][$column]['precision'] : "";
-        $columnDefault = (! empty($this->master['tables'][$table]['columns'][$column]['default'])) ? " SET DEFAULT ".$this->master['tables'][$table]['columns'][$column]['default'] : "";
-        $nullable = $this->master['tables'][$table]['columns'][$column]['nullable'] ? "" : " SET NOT NULL";
-        $diff[] = "\nALTER TABLE {$this->schema}.{$table} ALTER {$column} TYPE {$masterType}" . "({$masterPrecision})" . $columnDefault . $nullable . ";";
-        $summary['column']['alter'][] = "{$this->schema}.{$table} {$column}";
+        $masterType                         = $this->master['tables'][$table]['columns'][$column]['type'];
+        $masterPrecision                    = (!empty($this->master['tables'][$table]['columns'][$column]['precision'])) ? $this->master['tables'][$table]['columns'][$column]['precision'] : "";
+        $columnDefault                      = (!empty($this->master['tables'][$table]['columns'][$column]['default'])) ? " SET DEFAULT " . $this->master['tables'][$table]['columns'][$column]['default'] : "";
+        $nullable                           = $this->master['tables'][$table]['columns'][$column]['nullable'] ? "" : " SET NOT NULL";
+        $masterPrecision                    = $masterPrecision == '' ? null : " ({$masterPrecision})";
+        $this->diff[]                       = "ALTER TABLE {$this->schema}.{$table} ALTER {$column} TYPE {$masterType}" . $masterPrecision . $columnDefault . $nullable . ";";
+        $this->summary['column']['alter'][] = "{$this->schema}.{$table} {$column}";
     }
 
     protected function addConstraint($table, $constraint)
@@ -229,10 +241,7 @@ trait TablesTrait
                     $deleteAction = strtoupper(Constraint::$ON_ACTION_MAP[$constraintData['delete_option']]);
                     $updateAction = strtoupper(Constraint::$ON_ACTION_MAP[$constraintData['update_option']]);
                     $match        = strtoupper(Constraint::$MATCH_MAP[$constraintData['match_option']]);
-                    $this->diff[] = "ALTER TABLE {$this->schema}.{$table}
-                    ADD CONSTRAINT {$constraint} {$type} (" . implode(', ', $columns) . ")
-                    REFERENCES {$fkSchema}.{$fkTable} (" . implode(', ', $fkColumns) . ")  MATCH {$match}
-                    ON UPDATE {$updateAction} ON DELETE {$deleteAction};";
+                    $this->diff[] = "ALTER TABLE {$this->schema}.{$table} ADD CONSTRAINT {$constraint} {$type} (" . implode(', ', $columns) . ") REFERENCES {$fkSchema}.{$fkTable} (" . implode(', ', $fkColumns) . ") MATCH {$match} ON UPDATE {$updateAction} ON DELETE {$deleteAction};";
                 } else {
                     $this->summary[] = 'CONSTRAINT ' . $constraint . ' FOR TABLE ' . $this->schema . '.' . $table . ' COULD NOT BE ADDED BECAUSE NO COLUMNS WERE DETECTED';
                 }
