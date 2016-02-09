@@ -214,21 +214,21 @@ trait TablesTrait
         switch ($type) {
             case 'UNIQUE':
                 if (!empty($columns)) {
-                    $this->diff[] = "ALTER TABLE {$this->schema}.{$table} ADD CONSTRAINT {$constraint} {$type} (" . implode(', ', $columns) . ");";
+                    $this->diff[] = "ALTER TABLE {$this->schema}.{$table} ADD CONSTRAINT \"{$constraint}\" {$type} (" . implode(', ', $columns) . ");";
                 } else {
                     $this->summary[] = 'CONSTRAINT ' . $constraint . ' FOR TABLE ' . $this->schema . '.' . $table . ' COULD NOT BE ADDED BECAUSE NO COLUMNS WERE DETECTED';
                 }
                 break;
             case 'CHECK':
                 if (!empty($columns)) {
-                    $this->diff[] = "ALTER TABLE {$this->schema}.{$table} ADD CONSTRAINT {$constraint} {$type} CHECK {$constraintSrc}";
+                    $this->diff[] = "ALTER TABLE {$this->schema}.{$table} ADD CONSTRAINT \"{$constraint}\" {$type} CHECK {$constraintSrc}";
                 } else {
                     $this->summary[] = 'CONSTRAINT ' . $constraint . ' FOR TABLE ' . $this->schema . '.' . $table . ' COULD NOT BE ADDED BECAUSE NO COLUMNS WERE DETECTED';
                 }
                 break;
             case 'PRIMARY KEY':
                 if (!empty($columns)) {
-                    $this->diff[] = "ALTER TABLE {$this->schema}.{$table} ADD CONSTRAINT {$constraint} {$type} (" . implode(', ', $columns) . ");";
+                    $this->diff[] = "ALTER TABLE {$this->schema}.{$table} ADD CONSTRAINT \"{$constraint}\" {$type} (" . implode(', ', $columns) . ");";
                 } else {
                     $this->summary[] = 'CONSTRAINT ' . $constraint . ' FOR TABLE ' . $this->schema . '.' . $table . ' COULD NOT BE ADDED BECAUSE NO COLUMNS WERE DETECTED';
                 }
@@ -241,7 +241,7 @@ trait TablesTrait
                     $deleteAction = strtoupper(Constraint::$ON_ACTION_MAP[$constraintData['delete_option']]);
                     $updateAction = strtoupper(Constraint::$ON_ACTION_MAP[$constraintData['update_option']]);
                     $match        = strtoupper(Constraint::$MATCH_MAP[$constraintData['match_option']]);
-                    $this->diff[] = "ALTER TABLE {$this->schema}.{$table} ADD CONSTRAINT {$constraint} {$type} (" . implode(', ', $columns) . ") REFERENCES {$fkSchema}.{$fkTable} (" . implode(', ', $fkColumns) . ") MATCH {$match} ON UPDATE {$updateAction} ON DELETE {$deleteAction};";
+                    $this->diff[] = "ALTER TABLE {$this->schema}.{$table} ADD CONSTRAINT \"{$constraint}\" {$type} (" . implode(', ', $columns) . ") REFERENCES {$fkSchema}.{$fkTable} (" . implode(', ', $fkColumns) . ") MATCH {$match} ON UPDATE {$updateAction} ON DELETE {$deleteAction};";
                 } else {
                     $this->summary[] = 'CONSTRAINT ' . $constraint . ' FOR TABLE ' . $this->schema . '.' . $table . ' COULD NOT BE ADDED BECAUSE NO COLUMNS WERE DETECTED';
                 }
@@ -251,6 +251,6 @@ trait TablesTrait
 
     protected function dropConstraint($table, $constraint)
     {
-        $this->diff[] = "ALTER TABLE {$this->schema}.{$table} DROP CONSTRAINT {$constraint} CASCADE;";
+        $this->diff[] = "ALTER TABLE {$this->schema}.{$table} DROP CONSTRAINT \"{$constraint}\" CASCADE;";
     }
 }

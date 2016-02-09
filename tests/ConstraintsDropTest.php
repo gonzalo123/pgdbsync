@@ -29,7 +29,7 @@ class ConstraintsDropTest extends  \PHPUnit_Framework_TestCase
         $this->assertCount(1, $diff);
         $this->assertCount(1, $diff[0]['diff']);
 
-        $expected = "ALTER TABLE public.products DROP CONSTRAINT products_price_check CASCADE;";
+        $expected = "ALTER TABLE public.products DROP CONSTRAINT \"products_price_check\" CASCADE;";
 
         $this->assertEquals(StringParser::trimLines($expected), StringParser::trimLines($diff[0]['diff'][0]));
     }
