@@ -29,7 +29,7 @@ class ForeingKeyTest extends \PHPUnit_Framework_TestCase
         $this->assertCount(1, $diff);
         $this->assertCount(1, $diff[0]['diff']);
 
-        $expected = "ALTER TABLE public.weather ADD CONSTRAINT weather_city_fkey FOREIGN KEY (\"city\") REFERENCES public.cities (city) MATCH SIMPLE ON UPDATE NO ACTION ON DELETE NO ACTION;";
+        $expected = "ALTER TABLE public.weather ADD CONSTRAINT \"weather_city_fkey\" FOREIGN KEY (\"city\") REFERENCES public.cities (city) MATCH SIMPLE ON UPDATE NO ACTION ON DELETE NO ACTION;";
 
         $this->assertEquals(StringParser::trimLines($expected), StringParser::trimLines($diff[0]['diff'][0]));
     }
